@@ -1,18 +1,18 @@
-Installing Couchpad
+Installing Stickmouse
 ===================
 
-1. Drag Couchpad to the Applications folder.
-2. Open Couchpad from Applications.
+1. Drag Stickmouse to the Applications folder.
+2. Open Stickmouse from Applications.
 
-If macOS says Couchpad "cannot be opened" or "could not be verified":
+If macOS says Stickmouse "cannot be opened" or "could not be verified":
 open System Settings > Privacy & Security, scroll down and click "Open Anyway"
-next to Couchpad, then confirm. You only need to do this once.
+next to Stickmouse, then confirm. You only need to do this once.
 
-3. Couchpad asks for Accessibility access so it can move the pointer.
-   Click "Open Settings" and switch on Couchpad, then click "Restart Now".
+3. Stickmouse asks for Accessibility access so it can move the pointer.
+   Click "Open Settings" and switch on Stickmouse, then click "Restart Now".
 
-Couchpad is free for 7 days. Buy a license for $5 from the Couchpad menu
-(the controller icon in the menu bar) > Buy Couchpad.
+Stickmouse is free for 7 days. Buy a license for $5 from the Stickmouse menu
+(the controller icon in the menu bar) > Buy Stickmouse.
 
-Xbox is a trademark of Microsoft Corporation. Couchpad is not affiliated
+Xbox is a trademark of Microsoft Corporation. Stickmouse is not affiliated
 with or endorsed by Microsoft.

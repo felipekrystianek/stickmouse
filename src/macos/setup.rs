@@ -92,11 +92,11 @@ fn build(mtm: MainThreadMarker) -> Window {
     let (pad, pad_row) =
         row(mtm, "Controller", ui::button(mtm, "Bluetooth Settings", sel!(openBluetooth:)));
 
-    let login = ui::checkbox(mtm, "Start Couchpad when I log in", sel!(toggleLogin:));
+    let login = ui::checkbox(mtm, "Start Stickmouse when I log in", sel!(toggleLogin:));
     let restart = ui::hstack(
         mtm,
         &[
-            &ui::secondary(mtm, "Access is on. Couchpad needs to restart to use it.", 300.0),
+            &ui::secondary(mtm, "Access is on. Stickmouse needs to restart to use it.", 300.0),
             &ui::button(mtm, "Restart Now", sel!(restart:)),
         ],
         12.0,
@@ -108,10 +108,10 @@ fn build(mtm: MainThreadMarker) -> Window {
         mtm,
         &[
             &ui::app_icon(mtm, 88.0),
-            &ui::bold(mtm, "Welcome to Couchpad", 20.0),
+            &ui::bold(mtm, "Welcome to Stickmouse", 20.0),
             &ui::secondary(
                 mtm,
-                "Use your controller as a mouse and media remote. Couchpad needs one permission from macOS before it can move the pointer.",
+                "Use your controller as a mouse and media remote. Stickmouse needs one permission from macOS before it can move the pointer.",
                 ROW_WIDTH,
             ),
             &ui::separator(mtm, ROW_WIDTH),
@@ -124,7 +124,7 @@ fn build(mtm: MainThreadMarker) -> Window {
         ],
         14.0,
     );
-    let window = ui::window(mtm, "Set Up Couchpad", &content);
+    let window = ui::window(mtm, "Set Up Stickmouse", &content);
     Window { window, access, pad, login, restart, refreshed: Instant::now() }
 }
 
@@ -145,14 +145,14 @@ fn refresh_window(window: &Window) {
     let granted = permissions::accessibility_granted();
     let restart = permissions::needs_restart();
     let (symbol, color, text) = if restart {
-        ("arrow.clockwise.circle.fill", NSColor::systemOrangeColor(), "Allowed. Restart Couchpad to finish.")
+        ("arrow.clockwise.circle.fill", NSColor::systemOrangeColor(), "Allowed. Restart Stickmouse to finish.")
     } else if granted {
-        ("checkmark.circle.fill", NSColor::systemGreenColor(), "Allowed. Couchpad can move the pointer, click and press keys.")
+        ("checkmark.circle.fill", NSColor::systemGreenColor(), "Allowed. Stickmouse can move the pointer, click and press keys.")
     } else {
         (
             "exclamationmark.triangle.fill",
             NSColor::systemOrangeColor(),
-            "Needed to move the pointer, click and press keys. Click Open Settings and switch on Couchpad.",
+            "Needed to move the pointer, click and press keys. Click Open Settings and switch on Stickmouse.",
         )
     };
     set(&window.access, symbol, &color, text, !granted);

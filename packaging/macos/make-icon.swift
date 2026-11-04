@@ -1,4 +1,4 @@
-// Draws the Couchpad app icon: a white controller and steering circle on a blue rounded square.
+// Draws the Stickmouse app icon: a white controller and steering circle on a blue rounded square.
 // Every shape is drawn here; SF Symbols may not be used in app icons.
 // Usage: swift make-icon.swift out.png   (writes a 1024×1024 PNG)
 

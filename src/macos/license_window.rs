@@ -1,4 +1,4 @@
-//! The window for buying Couchpad and entering a license key.
+//! The window for buying Stickmouse and entering a license key.
 
 use std::cell::RefCell;
 use std::time::{Duration, Instant};
@@ -69,7 +69,7 @@ pub fn activate() {
 fn build(mtm: MainThreadMarker) -> Window {
     let title = ui::bold(mtm, "", 18.0);
     let detail = ui::secondary(mtm, "", WIDTH);
-    let buy = ui::button(mtm, &format!("Buy Couchpad – {}", license::PRICE), sel!(buyLicense:));
+    let buy = ui::button(mtm, &format!("Buy Stickmouse – {}", license::PRICE), sel!(buyLicense:));
     buy.setKeyEquivalent(&NSString::from_str("\r"));
 
     let key = NSTextField::textFieldWithString(&NSString::new(), mtm);
@@ -83,7 +83,7 @@ fn build(mtm: MainThreadMarker) -> Window {
         &[&ui::app_icon(mtm, 72.0), &title, &detail, &buy, &ui::separator(mtm, WIDTH), &entry, &message],
         12.0,
     );
-    let window = ui::window(mtm, "Couchpad License", &content);
+    let window = ui::window(mtm, "Stickmouse License", &content);
     Window { window, title, detail, buy, entry, key, message, refreshed: Instant::now() }
 }
 
@@ -104,23 +104,23 @@ fn refresh_window(window: &Window) {
     let status = license::status();
     let (title, detail) = match status {
         Status::Licensed => (
-            "Couchpad is yours".to_string(),
+            "Stickmouse is yours".to_string(),
             format!(
-                "Thank you for buying Couchpad! License {} is active on this Mac.",
+                "Thank you for buying Stickmouse! License {} is active on this Mac.",
                 license::masked_key().unwrap_or_default()
             ),
         ),
         Status::Trial { days_left } => (
             format!("{days_left} {} left in your trial", if days_left == 1 { "day" } else { "days" }),
             format!(
-                "Couchpad is free to try for 7 days. After that it costs {} once, with no subscription.",
+                "Stickmouse is free to try for 7 days. After that it costs {} once, with no subscription.",
                 license::PRICE
             ),
         ),
         Status::Expired => (
             "Your trial has ended".to_string(),
             format!(
-                "Buy Couchpad for {} to keep using your controller as a mouse. Already bought it? Enter your key below.",
+                "Buy Stickmouse for {} to keep using your controller as a mouse. Already bought it? Enter your key below.",
                 license::PRICE
             ),
         ),

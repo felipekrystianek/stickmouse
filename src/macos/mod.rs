@@ -33,7 +33,7 @@ const POLL_INTERVAL: f64 = 0.004;
 /// Runs `work` on a worker thread while the main thread runs the AppKit event loop.
 /// The process exits when `work` returns.
 pub fn run_app(work: impl FnOnce() -> ExitCode + Send + 'static) -> ExitCode {
-    let mtm = MainThreadMarker::new().expect("Couchpad must start on the main thread");
+    let mtm = MainThreadMarker::new().expect("Stickmouse must start on the main thread");
     let app = NSApplication::sharedApplication(mtm);
     app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
     app.setMainMenu(Some(&ui::main_menu(mtm)));

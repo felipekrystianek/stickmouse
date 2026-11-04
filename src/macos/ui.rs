@@ -133,7 +133,7 @@ pub fn actions(mtm: MainThreadMarker) -> Retained<Actions> {
     })
 }
 
-/// A main menu is never visible (Couchpad has no Dock icon), but text fields need its Edit items
+/// A main menu is never visible (Stickmouse has no Dock icon), but text fields need its Edit items
 /// for copy and paste shortcuts to work.
 pub fn main_menu(mtm: MainThreadMarker) -> Retained<NSMenu> {
     let item = |title: &str, action: Sel, key: &str| {
@@ -149,7 +149,7 @@ pub fn main_menu(mtm: MainThreadMarker) -> Retained<NSMenu> {
     };
     let app_menu = NSMenu::new(mtm);
     app_menu.addItem(&item("Close Window", sel!(performClose:), "w"));
-    app_menu.addItem(&item("Quit Couchpad", sel!(quit:), "q"));
+    app_menu.addItem(&item("Quit Stickmouse", sel!(quit:), "q"));
     let edit_menu = NSMenu::initWithTitle(NSMenu::alloc(mtm), &NSString::from_str("Edit"));
     for (title, action, key) in [
         ("Cut", sel!(cut:), "x"),

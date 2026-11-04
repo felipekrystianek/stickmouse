@@ -1,4 +1,4 @@
-# Licenses of the libraries built into Couchpad. Used by packaging/macos/build-app.sh:
+# Licenses of the libraries built into Stickmouse. Used by packaging/macos/build-app.sh:
 #   cargo about generate packaging/macos/licenses.hbs
 accepted = ["MIT", "Apache-2.0", "Apache-2.0 WITH LLVM-exception", "Zlib", "Unlicense", "Unicode-3.0", "BSD-3-Clause", "BSD-2-Clause", "ISC"]
 targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]

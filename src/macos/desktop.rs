@@ -14,7 +14,7 @@ const KEYBOARD_PROCESS: &str = "Assistive Control";
 const KEYBOARD_APP: &str = "/System/Library/Input Methods/Assistive Control.app";
 
 pub fn state_dir() -> PathBuf {
-    home().join("Library/Application Support/Couchpad")
+    home().join("Library/Application Support/Stickmouse")
 }
 
 pub fn config_file() -> PathBuf {
@@ -74,7 +74,7 @@ pub fn toggle_keyboard() {
 
 pub fn notify(title: &str, body: &str) {
     let script = format!(
-        "display notification {} with title \"Couchpad\" subtitle {}",
+        "display notification {} with title \"Stickmouse\" subtitle {}",
         applescript_string(body),
         applescript_string(title)
     );

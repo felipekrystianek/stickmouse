@@ -111,7 +111,7 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
         let symbol = if active { "gamecontroller.fill" } else { "gamecontroller" };
         let image = NSImage::imageWithSystemSymbolName_accessibilityDescription(
             &NSString::from_str(symbol),
-            Some(&NSString::from_str("Couchpad")),
+            Some(&NSString::from_str("Stickmouse")),
         );
         if let Some(image) = image {
             image.setTemplate(true);
@@ -140,10 +140,10 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
     menu.addItem(&enabled);
     menu.addItem(&item(mtm, "Settings…", Some(sel!(openSettings:)), ","));
     menu.addItem(&item(mtm, "Setup & Permissions…", Some(sel!(openSetup:)), ""));
-    let license_title = if license::status() == license::Status::Licensed { "License…" } else { "Buy Couchpad…" };
+    let license_title = if license::status() == license::Status::Licensed { "License…" } else { "Buy Stickmouse…" };
     menu.addItem(&item(mtm, license_title, Some(sel!(openLicense:)), ""));
     menu.addItem(&NSMenuItem::separatorItem(mtm));
-    menu.addItem(&item(mtm, "Quit Couchpad", Some(sel!(quit:)), "q"));
+    menu.addItem(&item(mtm, "Quit Stickmouse", Some(sel!(quit:)), "q"));
     bar.item.setMenu(Some(&menu));
 }
 

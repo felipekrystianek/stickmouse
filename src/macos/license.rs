@@ -1,4 +1,4 @@
-//! Couchpad is paid: a 7-day trial, then a license key sold through Polar (polar.sh).
+//! Stickmouse is paid: a 7-day trial, then a license key sold through Polar (polar.sh).
 //! Keys are activated and checked against Polar's public customer-portal API, which needs no
 //! secret, so nothing private is built into the app.
 
@@ -15,8 +15,8 @@ use super::desktop;
 
 /// From the Polar dashboard: Settings, General, Organization ID.
 const ORGANIZATION_ID: &str = "00000000-0000-0000-0000-000000000000";
-/// Where the "Buy" button goes: the Couchpad website, or a Polar checkout link.
-pub const BUY_URL: &str = "https://couchpad.app/#buy";
+/// Where the "Buy" button goes: the Stickmouse website, or a Polar checkout link.
+pub const BUY_URL: &str = "https://stickmouse.app/#buy";
 pub const PRICE: &str = "$5";
 const API: &str = "https://api.polar.sh/v1/customer-portal/license-keys";
 const TRIAL_DAYS: u64 = 7;
@@ -142,7 +142,7 @@ pub fn activate(key: String) {
                     stored.validated_at = Some(now());
                     save(stored);
                 });
-                set_message("Thank you! Couchpad is activated.");
+                set_message("Thank you! Stickmouse is activated.");
             }
             Ok((403, _)) => set_message(
                 "This key is already used on the maximum number of Macs, or it was refunded.",

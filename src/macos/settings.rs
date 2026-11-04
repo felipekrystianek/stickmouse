@@ -226,7 +226,7 @@ fn build(mtm: MainThreadMarker) -> Window {
             &ui::vstack(
                 mtm,
                 &[
-                    &ui::bold(mtm, "Couchpad", 16.0),
+                    &ui::bold(mtm, "Stickmouse", 16.0),
                     &ui::secondary(mtm, "Changes are saved and used right away.", 400.0),
                 ],
                 2.0,
@@ -258,7 +258,7 @@ fn build(mtm: MainThreadMarker) -> Window {
 
     rows.push(ui::separator(mtm, CONTENT_WIDTH).into_super());
     rows.push(ui::bold(mtm, "General", 13.0).into_super().into_super());
-    let login = ui::checkbox(mtm, "Start Couchpad when I log in", sel!(toggleLogin:));
+    let login = ui::checkbox(mtm, "Start Stickmouse when I log in", sel!(toggleLogin:));
     rows.push(login.clone().into_super().into_super());
 
     let access_icon = ui::symbol(mtm, "checkmark.circle.fill", &NSColor::systemGreenColor(), 18.0);
@@ -282,7 +282,7 @@ fn build(mtm: MainThreadMarker) -> Window {
     rows.push(
         ui::secondary(
             mtm,
-            "Xbox is a trademark of Microsoft Corporation. Couchpad is not affiliated with or endorsed by Microsoft.",
+            "Xbox is a trademark of Microsoft Corporation. Stickmouse is not affiliated with or endorsed by Microsoft.",
             CONTENT_WIDTH,
         )
         .into_super()
@@ -291,7 +291,7 @@ fn build(mtm: MainThreadMarker) -> Window {
 
     let views: Vec<&NSView> = rows.iter().map(|view| &**view).collect();
     let content = ui::vstack(mtm, &views, 10.0);
-    let window = ui::window(mtm, "Couchpad Settings", &content);
+    let window = ui::window(mtm, "Stickmouse Settings", &content);
     Window {
         window,
         fields,
@@ -373,7 +373,7 @@ fn refresh_status(window: &Window) {
         NSControlStateValueOff
     });
     let (symbol, color, text) = if permissions::needs_restart() {
-        ("arrow.clockwise.circle.fill", NSColor::systemOrangeColor(), "Accessibility allowed – restart Couchpad to use it")
+        ("arrow.clockwise.circle.fill", NSColor::systemOrangeColor(), "Accessibility allowed – restart Stickmouse to use it")
     } else if permissions::accessibility_granted() {
         ("checkmark.circle.fill", NSColor::systemGreenColor(), "Accessibility access is on")
     } else {
