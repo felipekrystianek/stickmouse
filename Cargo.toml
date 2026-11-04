@@ -3,7 +3,7 @@ name = "padcursor"
 version = "0.1.0"
 edition = "2024"
 description = "Use an Xbox controller as a mouse and media remote on KDE Plasma and macOS"
-license = "MIT"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 libc = "0.2"
