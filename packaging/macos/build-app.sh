@@ -20,9 +20,17 @@ cp target/release/padcursor "$app/Contents/MacOS/Stickmouse"
 cp packaging/macos/stickmouse.icns "$app/Contents/Resources/stickmouse.icns"
 cp packaging/macos/THIRD_PARTY_LICENSES.html "$app/Contents/Resources/"
 sed "s/VERSION/$version/g" packaging/macos/Info.plist > "$app/Contents/Info.plist"
-# Ad-hoc signature. macOS ties the Accessibility permission to it, so after an update users may
-# need to switch Stickmouse off and on again in the Accessibility list.
-codesign --force --sign - "$app"
+# macOS ties the Accessibility permission to the signature. Signing every build with the same
+# certificate keeps the permission across updates; an ad-hoc signature changes with each build.
+# The "Stickmouse Developer" certificate is self-signed and lives in the maintainer's login
+# keychain. Keep a backup of it: a new certificate means every user grants access again.
+identity=$(security find-identity -p codesigning | sed -n 's/.*) \([0-9A-F]\{40\}\) "Stickmouse Developer".*/\1/p' | head -n 1)
+if [ -n "$identity" ]; then
+    codesign --force --sign "$identity" "$app"
+else
+    echo "warning: no \"Stickmouse Developer\" certificate, signing ad hoc" >&2
+    codesign --force --sign - "$app"
+fi
 echo "Built $app"
 
 dmg=target/release/Stickmouse-$version.dmg

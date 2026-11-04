@@ -4,7 +4,10 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
-pub const DEFAULT_FILE: &str = include_str!("../packaging/config.toml");
+use crate::bindings::{Bindings, StickRole};
+
+/// The settings file with its comments, without the button lines, which `to_toml` writes.
+pub const TEMPLATE: &str = include_str!("../packaging/config.toml");
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
@@ -15,12 +18,17 @@ pub struct Config {
     pub stick_deadzone: f32,
     pub stick_curve: f32,
     pub circle_scale: f32,
-    pub b_hold_ms: u64,
+    pub left_stick: StickRole,
+    pub right_stick: StickRole,
+    /// Called b_hold_ms before buttons could be changed, when only B had a hold action.
+    #[serde(alias = "b_hold_ms")]
+    pub hold_ms: u64,
     pub xbox_hold_ms: u64,
     pub alt_tab_commit_ms: u64,
     pub steering_idle_ms: u64,
     pub volume_delay_ms: u64,
     pub volume_repeat_ms: u64,
+    pub buttons: Bindings,
 }
 
 impl Default for Config {
@@ -32,12 +40,15 @@ impl Default for Config {
             stick_deadzone: 0.12,
             stick_curve: 2.0,
             circle_scale: 1.5,
-            b_hold_ms: 400,
+            left_stick: StickRole::Pointer,
+            right_stick: StickRole::Scroll,
+            hold_ms: 400,
             xbox_hold_ms: 1000,
             alt_tab_commit_ms: 800,
             steering_idle_ms: 1000,
             volume_delay_ms: 400,
             volume_repeat_ms: 150,
+            buttons: Bindings::default(),
         }
     }
 }
@@ -47,12 +58,12 @@ impl Config {
         toml::from_str(text)
     }
 
-    /// The settings as a file: the shipped file with its comments, with these values filled in.
-    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    /// The settings as a file: the template with its comments and these values filled in,
+    /// followed by the button lines.
     pub fn to_toml(&self) -> String {
         let values = toml::Table::try_from(self).expect("settings always serialize");
         let mut text = String::new();
-        for line in DEFAULT_FILE.lines() {
+        for line in TEMPLATE.lines() {
             let key = line.split_once(" = ").map(|(key, _)| key);
             match key.and_then(|key| Some((key, values.get(key)?))) {
                 Some((key, toml::Value::Float(value))) => {
@@ -64,11 +75,15 @@ impl Config {
             }
             text.push('\n');
         }
+        for line in self.buttons.to_lines() {
+            text.push_str(&line);
+            text.push('\n');
+        }
         text
     }
 
-    pub fn b_hold(&self) -> Duration {
-        Duration::from_millis(self.b_hold_ms)
+    pub fn hold(&self) -> Duration {
+        Duration::from_millis(self.hold_ms)
     }
 
     pub fn xbox_hold(&self) -> Duration {
@@ -95,30 +110,47 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bindings::{Binding, Command, Control};
 
     #[test]
-    fn shipped_file_matches_the_defaults() {
-        let parsed = Config::parse(DEFAULT_FILE).unwrap();
+    fn template_without_buttons_reads_as_the_defaults() {
+        let parsed = Config::parse(TEMPLATE).unwrap();
         assert_eq!(format!("{parsed:?}"), format!("{:?}", Config::default()));
+    }
+
+    #[test]
+    fn default_settings_write_the_template_and_default_buttons() {
+        let text = Config::default().to_toml();
+        assert!(text.starts_with(TEMPLATE));
+        assert!(text.contains("\nb = \"right-click\"\nb_hold = \"escape\"\n"));
+    }
+
+    #[test]
+    fn written_settings_read_back_the_same() {
+        let mut config = Config {
+            pointer_speed: 2200.0,
+            precise_factor: 0.45,
+            hold_ms: 650,
+            left_stick: StickRole::Scroll,
+            right_stick: StickRole::Pointer,
+            ..Config::default()
+        };
+        config.buttons.set(Control::Y, Binding { press: Command::parse("cmd+w").unwrap(), hold: Command::Mute });
+        let parsed = Config::parse(&config.to_toml()).unwrap();
+        assert_eq!(format!("{parsed:?}"), format!("{config:?}"));
     }
 
     #[test]
     fn missing_values_use_defaults() {
         let parsed = Config::parse("pointer_speed = 900.0").unwrap();
         assert_eq!(parsed.pointer_speed, 900.0);
-        assert_eq!(parsed.b_hold_ms, Config::default().b_hold_ms);
+        assert_eq!(parsed.hold_ms, Config::default().hold_ms);
     }
 
     #[test]
-    fn default_settings_write_the_shipped_file() {
-        assert_eq!(Config::default().to_toml(), DEFAULT_FILE);
-    }
-
-    #[test]
-    fn written_settings_read_back_the_same() {
-        let config = Config { pointer_speed: 2200.0, precise_factor: 0.45, b_hold_ms: 650, ..Config::default() };
-        let parsed = Config::parse(&config.to_toml()).unwrap();
-        assert_eq!(format!("{parsed:?}"), format!("{config:?}"));
+    fn files_from_before_custom_buttons_still_load() {
+        let parsed = Config::parse("b_hold_ms = 500").unwrap();
+        assert_eq!(parsed.hold_ms, 500);
     }
 
     #[test]

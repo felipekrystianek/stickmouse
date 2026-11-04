@@ -1,7 +1,6 @@
 //! The settings window. Every change is saved to config.toml and applied right away.
 
 use std::cell::RefCell;
-use std::fs;
 use std::time::{Duration, Instant};
 
 use objc2::rc::Retained;
@@ -12,8 +11,7 @@ use objc2_app_kit::{
 };
 use objc2_foundation::NSString;
 
-use super::{cursor_theme, desktop, permissions, tray, ui};
-use crate::Message;
+use super::{config_store, desktop, permissions, ui};
 use crate::config::Config;
 
 const CONTENT_WIDTH: f64 = 520.0;
@@ -102,12 +100,12 @@ fn sections() -> Vec<(&'static str, Vec<Field>)> {
             "Buttons",
             vec![
                 Field {
-                    title: "Hold B for Esc after",
+                    title: "Hold actions start after",
                     min: 150.0,
                     max: 1500.0,
                     format: Format::Millis,
-                    get: |c| c.b_hold_ms as f64,
-                    set: |c, v| c.b_hold_ms = round_ms(v),
+                    get: |c| c.hold_ms as f64,
+                    set: |c, v| c.hold_ms = round_ms(v),
                 },
                 Field {
                     title: "Hold Xbox to turn off after",
@@ -187,7 +185,6 @@ struct Window {
     access_icon: Retained<NSImageView>,
     access_text: Retained<NSTextField>,
     access_button: Retained<NSButton>,
-    config: Config,
     refreshed: Instant,
 }
 
@@ -195,17 +192,10 @@ thread_local! {
     static WINDOW: RefCell<Option<Window>> = const { RefCell::new(None) };
 }
 
-fn load_config() -> Config {
-    fs::read_to_string(desktop::config_file())
-        .ok()
-        .and_then(|text| Config::parse(&text).ok())
-        .unwrap_or_default()
-}
-
 pub fn show(mtm: MainThreadMarker) {
     WINDOW.with_borrow_mut(|slot| {
         let window = slot.get_or_insert_with(|| build(mtm));
-        window.config = load_config();
+        config_store::reload();
         sync_sliders(window);
         refresh_status(window);
         ui::present(mtm, &window.window);
@@ -213,7 +203,7 @@ pub fn show(mtm: MainThreadMarker) {
 }
 
 fn build(mtm: MainThreadMarker) -> Window {
-    let config = load_config();
+    let config = config_store::get();
     let mut rows: Vec<Retained<NSView>> = Vec::new();
     let mut fields = Vec::new();
     let mut sliders = Vec::new();
@@ -272,6 +262,7 @@ fn build(mtm: MainThreadMarker) -> Window {
         mtm,
         &[
             &ui::button(mtm, "Restore Defaults", sel!(restoreDefaults:)),
+            &ui::button(mtm, "Customize Buttons…", sel!(openButtons:)),
             &ui::button(mtm, "Open Config File", sel!(openConfigFile:)),
             &ui::button(mtm, "Setup & Permissions…", sel!(openSetup:)),
         ],
@@ -301,7 +292,6 @@ fn build(mtm: MainThreadMarker) -> Window {
         access_icon,
         access_text,
         access_button,
-        config,
         refreshed: Instant::now(),
     }
 }
@@ -315,19 +305,21 @@ pub fn slider_changed(slider: &NSSlider) {
         let Some(field) = window.fields.get(index) else {
             return;
         };
-        (field.set)(&mut window.config, slider.doubleValue());
-        let value = (field.get)(&window.config);
+        let mut value = 0.0;
+        config_store::update(|config| {
+            (field.set)(config, slider.doubleValue());
+            value = (field.get)(config);
+        });
         window.values[index].setStringValue(&NSString::from_str(&describe(field.format, value)));
-        save(&window.config);
     });
 }
 
 pub fn restore_defaults() {
     WINDOW.with_borrow_mut(|slot| {
         if let Some(window) = slot.as_mut() {
-            window.config = Config::default();
+            // Buttons have their own Restore Defaults in the button window.
+            config_store::update(|config| *config = Config { buttons: config.buttons.clone(), ..Config::default() });
             sync_sliders(window);
-            save(&window.config);
         }
     });
 }
@@ -337,20 +329,12 @@ pub fn open_config_file() {
 }
 
 fn sync_sliders(window: &Window) {
+    let config = config_store::get();
     for (index, field) in window.fields.iter().enumerate() {
-        let value = (field.get)(&window.config);
+        let value = (field.get)(&config);
         window.sliders[index].setDoubleValue(value);
         window.values[index].setStringValue(&NSString::from_str(&describe(field.format, value)));
     }
-}
-
-fn save(config: &Config) {
-    let path = desktop::config_file();
-    if let Err(error) = fs::write(&path, config.to_toml()) {
-        eprintln!("padcursor: could not write {}: {error}", path.display());
-    }
-    cursor_theme::set_scale(config.circle_scale);
-    tray::send(Message::ConfigChanged(config.clone()));
 }
 
 /// Called on the main thread every few milliseconds; checks permissions twice a second.

@@ -3,3 +3,4 @@
 /packaging/src
 /packaging/*.pkg.tar.*
 /website/downloads
+.DS_Store

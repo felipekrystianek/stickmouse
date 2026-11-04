@@ -9,23 +9,6 @@ use crate::engine::{Action, Key, MouseButton};
 
 pub const DEVICE_PREFIX: &str = "padcursor";
 const WHEEL_NOTCH: i32 = 120;
-const ALL_KEYS: [Key; 14] = [
-    Key::Up,
-    Key::Down,
-    Key::Left,
-    Key::Right,
-    Key::Esc,
-    Key::Alt,
-    Key::Tab,
-    Key::Meta,
-    Key::PlayPause,
-    Key::NextTrack,
-    Key::PreviousTrack,
-    Key::VolumeUp,
-    Key::VolumeDown,
-    Key::Mute,
-];
-
 pub struct Output {
     mouse: VirtualDevice,
     keyboard: VirtualDevice,
@@ -56,7 +39,7 @@ impl Output {
             .build()?;
 
         let mut keys = AttributeSet::new();
-        for key in ALL_KEYS {
+        for key in Key::all() {
             keys.insert(key_code(key));
         }
         let keyboard = VirtualDevice::builder()?
@@ -83,12 +66,17 @@ impl Output {
             }
             Action::KeyDown(k) => self.keyboard.emit(&[key(key_code(k), 1)]),
             Action::KeyUp(k) => self.keyboard.emit(&[key(key_code(k), 0)]),
-            Action::Tap(k) => {
-                self.keyboard.emit(&[key(key_code(k), 1)])?;
-                self.keyboard.emit(&[key(key_code(k), 0)])
-            }
+            Action::Tap(k) => self.tap(key_code(k)),
+            Action::SwitcherHold(held) => self.keyboard.emit(&[key(KeyCode::KEY_LEFTALT, held.into())]),
+            Action::SwitcherNext => self.tap(KeyCode::KEY_TAB),
+            Action::Launcher => self.tap(KeyCode::KEY_LEFTMETA),
             _ => Ok(()),
         }
+    }
+
+    fn tap(&mut self, code: KeyCode) -> io::Result<()> {
+        self.keyboard.emit(&[key(code, 1)])?;
+        self.keyboard.emit(&[key(code, 0)])
     }
 
     fn scroll(&mut self, vertical: i32, horizontal: i32) -> io::Result<()> {
@@ -130,8 +118,26 @@ fn key_code(key: Key) -> KeyCode {
         Key::Left => KeyCode::KEY_LEFT,
         Key::Right => KeyCode::KEY_RIGHT,
         Key::Esc => KeyCode::KEY_ESC,
-        Key::Alt => KeyCode::KEY_LEFTALT,
         Key::Tab => KeyCode::KEY_TAB,
+        Key::Enter => KeyCode::KEY_ENTER,
+        Key::Space => KeyCode::KEY_SPACE,
+        Key::Backspace => KeyCode::KEY_BACKSPACE,
+        Key::Delete => KeyCode::KEY_DELETE,
+        Key::Home => KeyCode::KEY_HOME,
+        Key::End => KeyCode::KEY_END,
+        Key::PageUp => KeyCode::KEY_PAGEUP,
+        Key::PageDown => KeyCode::KEY_PAGEDOWN,
+        Key::Letter(letter) => letter_code(letter),
+        // KEY_1 through KEY_9 are 2 to 10, and KEY_0 is 11.
+        Key::Digit(0) => KeyCode::KEY_0,
+        Key::Digit(digit) => KeyCode(KeyCode::KEY_1.0 + u16::from(digit) - 1),
+        // F1 through F10 are consecutive; F11 and F12 come later.
+        Key::F(11) => KeyCode::KEY_F11,
+        Key::F(12) => KeyCode::KEY_F12,
+        Key::F(number) => KeyCode(KeyCode::KEY_F1.0 + u16::from(number) - 1),
+        Key::Ctrl => KeyCode::KEY_LEFTCTRL,
+        Key::Shift => KeyCode::KEY_LEFTSHIFT,
+        Key::Alt => KeyCode::KEY_LEFTALT,
         Key::Meta => KeyCode::KEY_LEFTMETA,
         Key::PlayPause => KeyCode::KEY_PLAYPAUSE,
         Key::NextTrack => KeyCode::KEY_NEXTSONG,
@@ -139,5 +145,33 @@ fn key_code(key: Key) -> KeyCode {
         Key::VolumeUp => KeyCode::KEY_VOLUMEUP,
         Key::VolumeDown => KeyCode::KEY_VOLUMEDOWN,
         Key::Mute => KeyCode::KEY_MUTE,
+    }
+}
+
+/// Linux key codes follow the QWERTY layout, not the alphabet.
+fn letter_code(letter: u8) -> KeyCode {
+    const LETTERS: [KeyCode; 26] = [
+        KeyCode::KEY_A, KeyCode::KEY_B, KeyCode::KEY_C, KeyCode::KEY_D, KeyCode::KEY_E,
+        KeyCode::KEY_F, KeyCode::KEY_G, KeyCode::KEY_H, KeyCode::KEY_I, KeyCode::KEY_J,
+        KeyCode::KEY_K, KeyCode::KEY_L, KeyCode::KEY_M, KeyCode::KEY_N, KeyCode::KEY_O,
+        KeyCode::KEY_P, KeyCode::KEY_Q, KeyCode::KEY_R, KeyCode::KEY_S, KeyCode::KEY_T,
+        KeyCode::KEY_U, KeyCode::KEY_V, KeyCode::KEY_W, KeyCode::KEY_X, KeyCode::KEY_Y,
+        KeyCode::KEY_Z,
+    ];
+    LETTERS[usize::from(letter.saturating_sub(b'a')).min(25)]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn digits_and_function_keys_use_the_right_codes() {
+        assert_eq!(key_code(Key::Digit(1)), KeyCode::KEY_1);
+        assert_eq!(key_code(Key::Digit(9)), KeyCode::KEY_9);
+        assert_eq!(key_code(Key::Digit(0)), KeyCode::KEY_0);
+        assert_eq!(key_code(Key::F(10)), KeyCode::KEY_F10);
+        assert_eq!(key_code(Key::F(12)), KeyCode::KEY_F12);
+        assert_eq!(key_code(Key::Letter(b'q')), KeyCode::KEY_Q);
     }
 }

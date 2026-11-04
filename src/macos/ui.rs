@@ -8,7 +8,7 @@ use objc2::runtime::{AnyObject, Sel};
 use objc2::{MainThreadMarker, MainThreadOnly, define_class, msg_send, sel};
 use objc2_app_kit::{
     NSApplication, NSApplicationDelegate, NSBox, NSBoxType, NSButton, NSColor, NSFont, NSImage, NSImageView,
-    NSLayoutAttribute, NSMenu, NSMenuItem, NSSlider, NSStackView, NSTextAlignment, NSTextField,
+    NSLayoutAttribute, NSMenu, NSMenuItem, NSPopUpButton, NSSlider, NSStackView, NSTextAlignment, NSTextField,
     NSUserInterfaceLayoutOrientation, NSView, NSWindow, NSWindowStyleMask,
 };
 use objc2_foundation::{NSArray, NSObject, NSObjectProtocol, NSPoint, NSRect, NSSize, NSString};
@@ -82,6 +82,30 @@ define_class!(
         #[unsafe(method(restart:))]
         fn restart(&self, _sender: Option<&AnyObject>) {
             super::permissions::restart();
+        }
+
+        #[unsafe(method(openButtons:))]
+        fn open_buttons(&self, _sender: Option<&AnyObject>) {
+            super::buttons_window::show(self.mtm());
+        }
+
+        #[unsafe(method(bindingChanged:))]
+        fn binding_changed(&self, sender: Option<&NSPopUpButton>) {
+            if let Some(view) = sender {
+                super::buttons_window::binding_changed(self.mtm(), view);
+            }
+        }
+
+        #[unsafe(method(stickChanged:))]
+        fn stick_changed(&self, sender: Option<&NSPopUpButton>) {
+            if let Some(view) = sender {
+                super::buttons_window::stick_changed(view);
+            }
+        }
+
+        #[unsafe(method(restoreButtons:))]
+        fn restore_buttons(&self, _sender: Option<&AnyObject>) {
+            super::buttons_window::restore_defaults(self.mtm());
         }
 
         #[unsafe(method(openLicense:))]

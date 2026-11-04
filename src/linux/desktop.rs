@@ -161,6 +161,17 @@ fn call_kwin(arguments: &[&str]) {
     }
 }
 
+/// Opens KDE Plasma's window overview, like Mission Control on a Mac.
+pub fn mission_control() {
+    let result = Command::new("qdbus6")
+        .args(["org.kde.kglobalaccel", "/component/kwin", "org.kde.kglobalaccel.Component.invokeShortcut", "Overview"])
+        .stdout(Stdio::null())
+        .spawn();
+    if let Err(error) = result {
+        eprintln!("padcursor: could not open the overview: {error}");
+    }
+}
+
 pub fn notify(title: &str, body: &str) {
     let spawned = Command::new("notify-send")
         .args(["-a", "padcursor", "-i", "input-gamepad", title, body])

@@ -10,8 +10,7 @@ use super::controller;
 use super::cursor_theme::STEERING;
 
 const LOW_BATTERY: f32 = 0.2;
-const KEYBOARD_PROCESS: &str = "Assistive Control";
-const KEYBOARD_APP: &str = "/System/Library/Input Methods/Assistive Control.app";
+const MISSION_CONTROL: &str = "/System/Applications/Mission Control.app";
 
 pub fn state_dir() -> PathBuf {
     home().join("Library/Application Support/Stickmouse")
@@ -50,26 +49,19 @@ impl CursorSwitcher {
     }
 }
 
-/// Shows or hides the Accessibility Keyboard.
+/// macOS does not let other apps show its Accessibility Keyboard.
 pub fn toggle_keyboard() {
-    thread::spawn(|| {
-        let running = Command::new("pgrep")
-            .args(["-x", KEYBOARD_PROCESS])
-            .stdout(Stdio::null())
-            .status()
-            .is_ok_and(|status| status.success());
-        let result = if running {
-            Command::new("pkill").args(["-x", KEYBOARD_PROCESS]).status()
-        } else {
-            Command::new("open").arg(KEYBOARD_APP).status()
-        };
-        if !result.is_ok_and(|status| status.success()) {
-            notify(
-                "Could not open the on-screen keyboard",
-                "Turn on the Accessibility Keyboard in System Settings, Accessibility, Keyboard.",
-            );
-        }
-    });
+    notify(
+        "The on-screen keyboard is not available",
+        "macOS does not allow it. Choose another action for this button in Customize Buttons.",
+    );
+}
+
+/// Opens Mission Control; doing it again closes it.
+pub fn mission_control() {
+    if let Err(error) = Command::new("open").arg(MISSION_CONTROL).spawn() {
+        eprintln!("padcursor: could not open Mission Control: {error}");
+    }
 }
 
 pub fn notify(title: &str, body: &str) {

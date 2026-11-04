@@ -1,14 +1,18 @@
 //! Turns controller input into desktop actions. Has no platform code and takes time as an
-//! argument, so the whole button layout can be tested without hardware.
+//! argument, so the whole button layout can be tested without hardware. What each button does
+//! comes from the settings (see bindings.rs).
 
 use std::time::Duration;
 
+pub use crate::bindings::Key;
+use crate::bindings::{Command, Control, Shortcut, StickRole};
 use crate::config::Config;
 
 const MAX_TICK: Duration = Duration::from_millis(50);
 const TRIGGER_PRESS: f32 = 0.5;
 const TRIGGER_RELEASE: f32 = 0.3;
 const REAL_MOUSE_PRIORITY: Duration = Duration::from_millis(500);
+const CONTROLS: usize = Control::ALL.len();
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Button {
@@ -23,6 +27,24 @@ pub enum Button {
     Xbox,
     LeftStickClick,
     RightStickClick,
+}
+
+impl Button {
+    fn control(self) -> Control {
+        match self {
+            Button::A => Control::A,
+            Button::B => Control::B,
+            Button::X => Control::X,
+            Button::Y => Control::Y,
+            Button::LeftBumper => Control::LeftBumper,
+            Button::RightBumper => Control::RightBumper,
+            Button::View => Control::View,
+            Button::Menu => Control::Menu,
+            Button::Xbox => Control::Xbox,
+            Button::LeftStickClick => Control::LeftStickClick,
+            Button::RightStickClick => Control::RightStickClick,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -54,24 +76,6 @@ pub enum MouseButton {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Key {
-    Up,
-    Down,
-    Left,
-    Right,
-    Esc,
-    Alt,
-    Tab,
-    Meta,
-    PlayPause,
-    NextTrack,
-    PreviousTrack,
-    VolumeUp,
-    VolumeDown,
-    Mute,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Action {
     Move(i32, i32),
     /// Vertical and horizontal scroll in hi-res wheel units (120 = one notch). Positive is up/right.
@@ -82,17 +86,17 @@ pub enum Action {
     KeyUp(Key),
     Tap(Key),
     Click(MouseButton),
+    /// Holds or lets go of the app switcher's modifier: Alt on Linux, Command on a Mac.
+    SwitcherHold(bool),
+    /// Moves the app switcher one app further (Tab while the modifier is held).
+    SwitcherNext,
+    /// Opens the application launcher: Meta on Linux, Spotlight on a Mac.
+    Launcher,
     ToggleKeyboard,
+    MissionControl,
     Steering(bool),
     SetEnabled(bool),
     Rumble,
-}
-
-#[derive(Default)]
-struct Trigger {
-    value: f32,
-    pressed: bool,
-    next_repeat: Duration,
 }
 
 pub struct Engine {
@@ -106,15 +110,18 @@ pub struct Engine {
     steering: bool,
     last_steer: Duration,
     real_mouse_at: Option<Duration>,
-    b_down_at: Option<Duration>,
+    /// Which controls are down, as far as padcursor acted on them.
+    pressed: [bool; CONTROLS],
+    /// When a control with a hold action went down, until it is released or the hold happens.
+    pending: [Option<Duration>; CONTROLS],
+    /// Commands started by a press that must be finished on release, like a held mouse button.
+    active: [Option<Command>; CONTROLS],
+    /// When a held volume command repeats next.
+    next_repeat: [Option<Duration>; CONTROLS],
     xbox_down_at: Option<Duration>,
     xbox_toggled: bool,
-    left_held: bool,
-    middle_held: bool,
     dpad: (i32, i32),
-    alt_release_at: Option<Duration>,
-    volume_down: Trigger,
-    volume_up: Trigger,
+    switcher_release_at: Option<Duration>,
     last_tick: Option<Duration>,
     actions: Vec<Action>,
 }
@@ -132,21 +139,20 @@ impl Engine {
             steering: false,
             last_steer: Duration::ZERO,
             real_mouse_at: None,
-            b_down_at: None,
+            pressed: [false; CONTROLS],
+            pending: [None; CONTROLS],
+            active: std::array::from_fn(|_| None),
+            next_repeat: [None; CONTROLS],
             xbox_down_at: None,
             xbox_toggled: false,
-            left_held: false,
-            middle_held: false,
             dpad: (0, 0),
-            alt_release_at: None,
-            volume_down: Trigger::default(),
-            volume_up: Trigger::default(),
+            switcher_release_at: None,
             last_tick: None,
             actions: Vec::new(),
         }
     }
 
-    /// Applies new settings while running. Held buttons and stick positions are kept.
+    /// Applies new settings while running. Buttons held now finish with their old command.
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     pub fn set_config(&mut self, config: Config) {
         self.config = config;
@@ -155,9 +161,9 @@ impl Engine {
     pub fn handle(&mut self, input: Input, now: Duration) -> Vec<Action> {
         match input {
             Input::Button(Button::Xbox, pressed) => self.xbox(pressed, now),
-            Input::Button(button, pressed) if self.enabled => self.button(button, pressed, now),
+            Input::Button(button, pressed) if self.enabled => self.control(button.control(), pressed, now),
             Input::Button(..) => {}
-            Input::Axis(axis, value) => self.axis(axis, value),
+            Input::Axis(axis, value) => self.axis(axis, value, now),
             Input::RealMouseMoved => {
                 self.real_mouse_at = Some(now);
                 self.set_steering(false);
@@ -166,8 +172,6 @@ impl Engine {
                 self.release_all();
                 self.left = (0.0, 0.0);
                 self.right = (0.0, 0.0);
-                self.volume_down = Trigger::default();
-                self.volume_up = Trigger::default();
                 self.xbox_down_at = None;
                 self.xbox_toggled = false;
             }
@@ -176,7 +180,7 @@ impl Engine {
         std::mem::take(&mut self.actions)
     }
 
-    /// Advances everything time-based: stick motion, button holds and key repeats.
+    /// Advances everything time-based: stick motion, button holds and repeats.
     pub fn tick(&mut self, now: Duration) -> Vec<Action> {
         let dt = self
             .last_tick
@@ -194,9 +198,9 @@ impl Engine {
         }
 
         if self.enabled {
-            self.tick_b(now);
-            self.tick_alt(now);
-            self.tick_triggers(now);
+            self.tick_holds(now);
+            self.tick_repeats(now);
+            self.tick_switcher(now);
             self.tick_sticks(dt, now);
         }
         std::mem::take(&mut self.actions)
@@ -208,133 +212,222 @@ impl Engine {
         std::mem::take(&mut self.actions)
     }
 
+    /// Holding the Xbox button always toggles padcursor; a short press runs its command.
     fn xbox(&mut self, pressed: bool, now: Duration) {
         if pressed {
             self.xbox_down_at = Some(now);
             self.xbox_toggled = false;
         } else {
             if self.xbox_down_at.take().is_some() && !self.xbox_toggled && self.enabled {
-                self.actions.push(Action::Tap(Key::Meta));
+                let command = self.config.buttons.get(Control::Xbox).press.clone();
+                self.tap(&command, now);
             }
             self.xbox_toggled = false;
         }
     }
 
-    fn button(&mut self, button: Button, pressed: bool, now: Duration) {
-        match (button, pressed) {
-            (Button::A, true) => {
-                self.left_held = true;
-                self.actions.push(Action::MouseDown(MouseButton::Left));
+    fn control(&mut self, control: Control, pressed: bool, now: Duration) {
+        let index = control.index();
+        if self.pressed[index] == pressed {
+            return;
+        }
+        self.pressed[index] = pressed;
+        let binding = self.config.buttons.get(control).clone();
+        if pressed {
+            if binding.hold == Command::None {
+                self.begin(control, binding.press, now);
+            } else {
+                // Wait to see whether this is a press or a hold.
+                self.pending[index] = Some(now);
             }
-            (Button::A, false) if self.left_held => {
-                self.left_held = false;
-                self.actions.push(Action::MouseUp(MouseButton::Left));
-            }
-            (Button::X, true) => {
-                self.middle_held = true;
-                self.actions.push(Action::MouseDown(MouseButton::Middle));
-            }
-            (Button::X, false) if self.middle_held => {
-                self.middle_held = false;
-                self.actions.push(Action::MouseUp(MouseButton::Middle));
-            }
-            (Button::B, true) => self.b_down_at = Some(now),
-            (Button::B, false) => {
-                if self.b_down_at.take().is_some() {
-                    self.actions.push(Action::Click(MouseButton::Right));
-                }
-            }
-            (Button::Y, true) => self.actions.push(Action::ToggleKeyboard),
-            (Button::LeftBumper, true) => self.actions.push(Action::Tap(Key::PreviousTrack)),
-            (Button::RightBumper, true) => self.actions.push(Action::Tap(Key::NextTrack)),
-            (Button::Menu, true) => self.actions.push(Action::Tap(Key::PlayPause)),
-            (Button::RightStickClick, true) => self.actions.push(Action::Tap(Key::Mute)),
-            (Button::LeftStickClick, true) => self.precise = !self.precise,
-            (Button::View, true) => {
-                if self.alt_release_at.is_none() {
-                    self.actions.push(Action::KeyDown(Key::Alt));
-                }
-                self.actions.push(Action::Tap(Key::Tab));
-                self.alt_release_at = Some(now + self.config.alt_tab_commit());
-            }
-            _ => {}
+        } else if self.pending[index].take().is_some() {
+            self.tap(&binding.press, now);
+        } else {
+            self.end(control);
         }
     }
 
-    fn axis(&mut self, axis: Axis, value: f32) {
+    fn axis(&mut self, axis: Axis, value: f32, now: Duration) {
         match axis {
             Axis::LeftX => self.left.0 = value,
             Axis::LeftY => self.left.1 = value,
             Axis::RightX => self.right.0 = value,
             Axis::RightY => self.right.1 = value,
-            Axis::LeftTrigger => self.volume_down.value = value,
-            Axis::RightTrigger => self.volume_up.value = value,
-            Axis::DpadX => self.dpad_axis(value, true),
-            Axis::DpadY => self.dpad_axis(value, false),
+            Axis::LeftTrigger | Axis::RightTrigger => {
+                let control =
+                    if axis == Axis::LeftTrigger { Control::LeftTrigger } else { Control::RightTrigger };
+                if !self.enabled {
+                    return;
+                }
+                let pressed = self.pressed[control.index()];
+                if !pressed && value >= TRIGGER_PRESS {
+                    self.control(control, true, now);
+                } else if pressed && value < TRIGGER_RELEASE {
+                    self.control(control, false, now);
+                }
+            }
+            Axis::DpadX => self.dpad_axis(value, true, now),
+            Axis::DpadY => self.dpad_axis(value, false, now),
         }
     }
 
-    fn dpad_axis(&mut self, value: f32, horizontal: bool) {
+    fn dpad_axis(&mut self, value: f32, horizontal: bool, now: Duration) {
         let direction = value.round() as i32;
-        let (current, negative, positive) = if horizontal {
-            (&mut self.dpad.0, Key::Left, Key::Right)
+        let (previous, negative, positive) = if horizontal {
+            (self.dpad.0, Control::DpadLeft, Control::DpadRight)
         } else {
-            (&mut self.dpad.1, Key::Up, Key::Down)
+            (self.dpad.1, Control::DpadUp, Control::DpadDown)
         };
-        let previous = *current;
         if !self.enabled || previous == direction {
-            if !self.enabled {
-                *current = 0;
-            }
             return;
         }
-        *current = direction;
-        let key_for = |d| if d < 0 { negative } else { positive };
+        if horizontal {
+            self.dpad.0 = direction;
+        } else {
+            self.dpad.1 = direction;
+        }
+        let control_for = |d: i32| if d < 0 { negative } else { positive };
         if previous != 0 {
-            self.actions.push(Action::KeyUp(key_for(previous)));
+            self.control(control_for(previous), false, now);
         }
         if direction != 0 {
-            self.actions.push(Action::KeyDown(key_for(direction)));
+            self.control(control_for(direction), true, now);
         }
     }
 
-    fn tick_b(&mut self, now: Duration) {
-        if let Some(down_at) = self.b_down_at
-            && now.saturating_sub(down_at) >= self.config.b_hold()
-        {
-            self.b_down_at = None;
-            self.actions.push(Action::Tap(Key::Esc));
-        }
-    }
-
-    fn tick_alt(&mut self, now: Duration) {
-        if self.alt_release_at.is_some_and(|at| now >= at) {
-            self.alt_release_at = None;
-            self.actions.push(Action::KeyUp(Key::Alt));
-        }
-    }
-
-    fn tick_triggers(&mut self, now: Duration) {
-        let (first, repeat) = (self.config.volume_delay(), self.config.volume_repeat());
-        for (trigger, key) in [
-            (&mut self.volume_down, Key::VolumeDown),
-            (&mut self.volume_up, Key::VolumeUp),
-        ] {
-            if !trigger.pressed && trigger.value >= TRIGGER_PRESS {
-                trigger.pressed = true;
-                trigger.next_repeat = now + first;
-                self.actions.push(Action::Tap(key));
-            } else if trigger.pressed && trigger.value < TRIGGER_RELEASE {
-                trigger.pressed = false;
-            } else if trigger.pressed && now >= trigger.next_repeat {
-                trigger.next_repeat = now + repeat;
-                self.actions.push(Action::Tap(key));
+    /// Starts a command when its control goes down. Commands that last are ended by `end`.
+    fn begin(&mut self, control: Control, command: Command, now: Duration) {
+        let index = control.index();
+        match &command {
+            Command::None => return,
+            Command::LeftClick | Command::RightClick | Command::MiddleClick => {
+                self.actions.push(Action::MouseDown(mouse_button(&command)));
+            }
+            Command::Keys(shortcut) => {
+                for modifier in &shortcut.modifiers {
+                    self.actions.push(Action::KeyDown(*modifier));
+                }
+                self.actions.push(Action::KeyDown(shortcut.key));
+            }
+            Command::VolumeUp | Command::VolumeDown => {
+                self.actions.push(Action::Tap(media_key(&command)));
+                self.next_repeat[index] = Some(now + self.config.volume_delay());
+            }
+            _ => {
+                self.fire(&command, now);
+                return;
             }
         }
+        self.active[index] = Some(command);
+    }
+
+    fn end(&mut self, control: Control) {
+        let index = control.index();
+        self.next_repeat[index] = None;
+        match self.active[index].take() {
+            Some(command @ (Command::LeftClick | Command::RightClick | Command::MiddleClick)) => {
+                self.actions.push(Action::MouseUp(mouse_button(&command)));
+            }
+            Some(Command::Keys(shortcut)) => self.release_shortcut(&shortcut),
+            _ => {}
+        }
+    }
+
+    /// Runs a command at once, as a whole press and release.
+    fn tap(&mut self, command: &Command, now: Duration) {
+        match command {
+            Command::None => {}
+            Command::LeftClick | Command::RightClick | Command::MiddleClick => {
+                self.actions.push(Action::Click(mouse_button(command)));
+            }
+            Command::Keys(shortcut) => {
+                for modifier in &shortcut.modifiers {
+                    self.actions.push(Action::KeyDown(*modifier));
+                }
+                self.actions.push(Action::Tap(shortcut.key));
+                for modifier in shortcut.modifiers.iter().rev() {
+                    self.actions.push(Action::KeyUp(*modifier));
+                }
+            }
+            Command::VolumeUp | Command::VolumeDown => self.actions.push(Action::Tap(media_key(command))),
+            other => self.fire(other, now),
+        }
+    }
+
+    /// Commands that happen once, whether the control is pressed or held.
+    fn fire(&mut self, command: &Command, now: Duration) {
+        match command {
+            Command::PreciseMode => self.precise = !self.precise,
+            Command::AppSwitcher => {
+                if self.switcher_release_at.is_none() {
+                    self.actions.push(Action::SwitcherHold(true));
+                }
+                self.actions.push(Action::SwitcherNext);
+                self.switcher_release_at = Some(now + self.config.alt_tab_commit());
+            }
+            Command::Launcher => self.actions.push(Action::Launcher),
+            Command::OnScreenKeyboard => self.actions.push(Action::ToggleKeyboard),
+            Command::MissionControl => self.actions.push(Action::MissionControl),
+            Command::PlayPause | Command::NextTrack | Command::PreviousTrack | Command::Mute => {
+                self.actions.push(Action::Tap(media_key(command)));
+            }
+            _ => self.tap(command, now),
+        }
+    }
+
+    fn release_shortcut(&mut self, shortcut: &Shortcut) {
+        self.actions.push(Action::KeyUp(shortcut.key));
+        for modifier in shortcut.modifiers.iter().rev() {
+            self.actions.push(Action::KeyUp(*modifier));
+        }
+    }
+
+    fn tick_holds(&mut self, now: Duration) {
+        for control in Control::ALL {
+            let index = control.index();
+            if let Some(down_at) = self.pending[index]
+                && now.saturating_sub(down_at) >= self.config.hold()
+            {
+                self.pending[index] = None;
+                let hold = self.config.buttons.get(control).hold.clone();
+                self.tap(&hold, now);
+            }
+        }
+    }
+
+    fn tick_repeats(&mut self, now: Duration) {
+        for index in 0..CONTROLS {
+            if let Some(at) = self.next_repeat[index]
+                && now >= at
+                && let Some(command) = &self.active[index]
+            {
+                let key = media_key(command);
+                self.actions.push(Action::Tap(key));
+                self.next_repeat[index] = Some(now + self.config.volume_repeat());
+            }
+        }
+    }
+
+    fn tick_switcher(&mut self, now: Duration) {
+        if self.switcher_release_at.is_some_and(|at| now >= at) {
+            self.switcher_release_at = None;
+            self.actions.push(Action::SwitcherHold(false));
+        }
+    }
+
+    fn stick_for(&self, role: StickRole) -> (f32, f32) {
+        let mut sum = (0.0, 0.0);
+        for (stick, stick_role) in [(self.left, self.config.left_stick), (self.right, self.config.right_stick)] {
+            if stick_role == role {
+                let shaped = shape_stick(stick, self.config.stick_deadzone, self.config.stick_curve);
+                sum = (sum.0 + shaped.0, sum.1 + shaped.1);
+            }
+        }
+        sum
     }
 
     fn tick_sticks(&mut self, dt: f32, now: Duration) {
-        let pointer = shape_stick(self.left, self.config.stick_deadzone, self.config.stick_curve);
+        let pointer = self.stick_for(StickRole::Pointer);
         if pointer != (0.0, 0.0) {
             let factor = if self.precise { self.config.precise_factor } else { 1.0 };
             let speed = self.config.pointer_speed * factor * dt;
@@ -355,7 +448,7 @@ impl Engine {
             self.set_steering(false);
         }
 
-        let scroll = shape_stick(self.right, self.config.stick_deadzone, self.config.stick_curve);
+        let scroll = self.stick_for(StickRole::Scroll);
         if scroll != (0.0, 0.0) {
             let speed = self.config.scroll_speed * dt;
             let horizontal = scroll.0 * speed + self.scroll_remainder.0;
@@ -384,34 +477,35 @@ impl Engine {
     }
 
     fn release_all(&mut self) {
-        if std::mem::take(&mut self.left_held) {
-            self.actions.push(Action::MouseUp(MouseButton::Left));
+        for control in Control::ALL {
+            self.end(control);
         }
-        if std::mem::take(&mut self.middle_held) {
-            self.actions.push(Action::MouseUp(MouseButton::Middle));
+        self.pressed = [false; CONTROLS];
+        self.pending = [None; CONTROLS];
+        self.dpad = (0, 0);
+        if self.switcher_release_at.take().is_some() {
+            self.actions.push(Action::SwitcherHold(false));
         }
-        self.b_down_at = None;
-        self.dpad_axis_release();
-        if self.alt_release_at.take().is_some() {
-            self.actions.push(Action::KeyUp(Key::Alt));
-        }
-        self.volume_down.pressed = false;
-        self.volume_up.pressed = false;
         self.set_steering(false);
     }
+}
 
-    fn dpad_axis_release(&mut self) {
-        let (x, y) = std::mem::take(&mut self.dpad);
-        match x {
-            -1 => self.actions.push(Action::KeyUp(Key::Left)),
-            1 => self.actions.push(Action::KeyUp(Key::Right)),
-            _ => {}
-        }
-        match y {
-            -1 => self.actions.push(Action::KeyUp(Key::Up)),
-            1 => self.actions.push(Action::KeyUp(Key::Down)),
-            _ => {}
-        }
+fn mouse_button(command: &Command) -> MouseButton {
+    match command {
+        Command::RightClick => MouseButton::Right,
+        Command::MiddleClick => MouseButton::Middle,
+        _ => MouseButton::Left,
+    }
+}
+
+fn media_key(command: &Command) -> Key {
+    match command {
+        Command::VolumeUp => Key::VolumeUp,
+        Command::VolumeDown => Key::VolumeDown,
+        Command::NextTrack => Key::NextTrack,
+        Command::PreviousTrack => Key::PreviousTrack,
+        Command::Mute => Key::Mute,
+        _ => Key::PlayPause,
     }
 }
 
@@ -428,6 +522,7 @@ fn shape_stick((x, y): (f32, f32), deadzone: f32, curve: f32) -> (f32, f32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::bindings::Binding;
 
     fn ms(value: u64) -> Duration {
         Duration::from_millis(value)
@@ -435,6 +530,15 @@ mod tests {
 
     fn engine() -> Engine {
         Engine::new(Config::default(), true)
+    }
+
+    fn engine_with(control: Control, press: &str, hold: &str) -> Engine {
+        let mut config = Config::default();
+        config.buttons.set(
+            control,
+            Binding { press: Command::parse(press).unwrap(), hold: Command::parse(hold).unwrap() },
+        );
+        Engine::new(config, true)
     }
 
     fn press(button: Button) -> Input {
@@ -472,8 +576,9 @@ mod tests {
 
     #[test]
     fn simple_buttons_match_the_layout() {
+        let y = if cfg!(target_os = "macos") { Action::MissionControl } else { Action::ToggleKeyboard };
         let cases = [
-            (Button::Y, Action::ToggleKeyboard),
+            (Button::Y, y),
             (Button::LeftBumper, Action::Tap(Key::PreviousTrack)),
             (Button::RightBumper, Action::Tap(Key::NextTrack)),
             (Button::Menu, Action::Tap(Key::PlayPause)),
@@ -486,16 +591,17 @@ mod tests {
     }
 
     #[test]
-    fn view_cycles_windows_then_commits() {
+    fn view_cycles_apps_then_commits() {
         let mut e = engine();
         assert_eq!(
             e.handle(press(Button::View), ms(0)),
-            [Action::KeyDown(Key::Alt), Action::Tap(Key::Tab)]
+            [Action::SwitcherHold(true), Action::SwitcherNext]
         );
         assert_eq!(e.tick(ms(500)), []);
-        assert_eq!(e.handle(press(Button::View), ms(500)), [Action::Tap(Key::Tab)]);
-        assert_eq!(e.tick(ms(1200)), []);
-        assert_eq!(e.tick(ms(1300)), [Action::KeyUp(Key::Alt)]);
+        e.handle(release(Button::View), ms(510));
+        assert_eq!(e.handle(press(Button::View), ms(520)), [Action::SwitcherNext]);
+        assert_eq!(e.tick(ms(1300)), []);
+        assert_eq!(e.tick(ms(1320)), [Action::SwitcherHold(false)]);
     }
 
     #[test]
@@ -513,17 +619,65 @@ mod tests {
     #[test]
     fn triggers_change_volume_and_repeat_while_held() {
         let mut e = engine();
-        e.handle(Input::Axis(Axis::RightTrigger, 0.9), ms(0));
-        assert_eq!(e.tick(ms(0)), [Action::Tap(Key::VolumeUp)]);
+        e.tick(ms(0));
+        assert_eq!(e.handle(Input::Axis(Axis::RightTrigger, 0.9), ms(0)), [Action::Tap(Key::VolumeUp)]);
         assert_eq!(e.tick(ms(100)), []);
         assert_eq!(e.tick(ms(400)), [Action::Tap(Key::VolumeUp)]);
         assert_eq!(e.tick(ms(500)), []);
         assert_eq!(e.tick(ms(550)), [Action::Tap(Key::VolumeUp)]);
+        assert_eq!(e.handle(Input::Axis(Axis::RightTrigger, 0.4), ms(555)), [], "still above release");
         e.handle(Input::Axis(Axis::RightTrigger, 0.0), ms(560));
         assert_eq!(e.tick(ms(570)), []);
         assert_eq!(e.tick(ms(2000)), []);
-        e.handle(Input::Axis(Axis::LeftTrigger, 1.0), ms(2000));
-        assert_eq!(e.tick(ms(2000)), [Action::Tap(Key::VolumeDown)]);
+        assert_eq!(e.handle(Input::Axis(Axis::LeftTrigger, 1.0), ms(2000)), [Action::Tap(Key::VolumeDown)]);
+    }
+
+    #[test]
+    fn a_button_can_send_a_held_shortcut() {
+        let mut e = engine_with(Control::A, "cmd+shift+t", "none");
+        assert_eq!(
+            e.handle(press(Button::A), ms(0)),
+            [Action::KeyDown(Key::Shift), Action::KeyDown(Key::Meta), Action::KeyDown(Key::Letter(b't'))]
+        );
+        assert_eq!(
+            e.handle(release(Button::A), ms(50)),
+            [Action::KeyUp(Key::Letter(b't')), Action::KeyUp(Key::Meta), Action::KeyUp(Key::Shift)]
+        );
+    }
+
+    #[test]
+    fn any_button_can_have_a_hold_action() {
+        let mut e = engine_with(Control::Menu, "play-pause", "cmd+q");
+        assert_eq!(e.handle(press(Button::Menu), ms(0)), []);
+        assert_eq!(
+            e.tick(ms(400)),
+            [Action::KeyDown(Key::Meta), Action::Tap(Key::Letter(b'q')), Action::KeyUp(Key::Meta)]
+        );
+        assert_eq!(e.handle(release(Button::Menu), ms(450)), []);
+        e.handle(press(Button::Menu), ms(1000));
+        assert_eq!(e.handle(release(Button::Menu), ms(1100)), [Action::Tap(Key::PlayPause)]);
+    }
+
+    #[test]
+    fn triggers_and_dpad_take_any_command() {
+        let mut e = engine_with(Control::LeftTrigger, "left-click", "none");
+        assert_eq!(
+            e.handle(Input::Axis(Axis::LeftTrigger, 1.0), ms(0)),
+            [Action::MouseDown(MouseButton::Left)]
+        );
+        assert_eq!(
+            e.handle(Input::Axis(Axis::LeftTrigger, 0.0), ms(10)),
+            [Action::MouseUp(MouseButton::Left)]
+        );
+        let mut e = engine_with(Control::DpadUp, "mission-control", "none");
+        assert_eq!(e.handle(Input::Axis(Axis::DpadY, -1.0), ms(0)), [Action::MissionControl]);
+    }
+
+    #[test]
+    fn none_does_nothing() {
+        let mut e = engine_with(Control::A, "none", "none");
+        assert_eq!(e.handle(press(Button::A), ms(0)), []);
+        assert_eq!(e.handle(release(Button::A), ms(10)), []);
     }
 
     fn total_motion(actions: &[Action]) -> (i32, i32) {
@@ -550,6 +704,18 @@ mod tests {
     }
 
     #[test]
+    fn sticks_can_swap_roles() {
+        let config = Config { left_stick: StickRole::Scroll, right_stick: StickRole::Pointer, ..Config::default() };
+        let mut e = Engine::new(config, true);
+        e.tick(ms(0));
+        e.handle(Input::Axis(Axis::LeftY, -1.0), ms(0));
+        e.handle(Input::Axis(Axis::RightX, 1.0), ms(0));
+        let actions = e.tick(ms(8));
+        assert!(actions.iter().any(|a| matches!(a, Action::Scroll(v, 0) if *v > 0)), "{actions:?}");
+        assert!(actions.iter().any(|a| matches!(a, Action::Move(x, 0) if *x > 0)), "{actions:?}");
+    }
+
+    #[test]
     fn stick_inside_deadzone_does_nothing() {
         let mut e = engine();
         e.tick(ms(0));
@@ -568,6 +734,7 @@ mod tests {
         let precise_x = total_motion(&steer_right_for(&mut precise, 125)).0;
         assert!((normal_x as f32 * 0.3 - precise_x as f32).abs() < 3.0, "{normal_x} {precise_x}");
 
+        precise.handle(release(Button::LeftStickClick), ms(0));
         precise.handle(press(Button::LeftStickClick), ms(0));
         assert!(!precise.precise);
     }
@@ -608,7 +775,7 @@ mod tests {
         let mut e = engine();
         e.handle(press(Button::Xbox), ms(0));
         assert_eq!(e.tick(ms(100)), []);
-        assert_eq!(e.handle(release(Button::Xbox), ms(150)), [Action::Tap(Key::Meta)]);
+        assert_eq!(e.handle(release(Button::Xbox), ms(150)), [Action::Launcher]);
     }
 
     #[test]
@@ -651,7 +818,7 @@ mod tests {
         let actions = e.handle(Input::ToggleEnabled, ms(20));
         for expected in [
             Action::MouseUp(MouseButton::Left),
-            Action::KeyUp(Key::Alt),
+            Action::SwitcherHold(false),
             Action::KeyUp(Key::Left),
             Action::Steering(false),
             Action::SetEnabled(false),

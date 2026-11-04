@@ -139,6 +139,7 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
     enabled.setState(if tray.enabled { NSControlStateValueOn } else { NSControlStateValueOff });
     menu.addItem(&enabled);
     menu.addItem(&item(mtm, "Settings…", Some(sel!(openSettings:)), ","));
+    menu.addItem(&item(mtm, "Customize Buttons…", Some(sel!(openButtons:)), ""));
     menu.addItem(&item(mtm, "Setup & Permissions…", Some(sel!(openSetup:)), ""));
     let license_title = if license::status() == license::Status::Licensed { "License…" } else { "Buy Stickmouse…" };
     menu.addItem(&item(mtm, license_title, Some(sel!(openLicense:)), ""));

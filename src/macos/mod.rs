@@ -2,9 +2,12 @@
 //! thread runs the app and a timer, while the platform-independent loop in `main.rs` runs on a
 //! worker thread and talks to it through channels and shared state.
 
+pub mod buttons_window;
+pub mod config_store;
 pub mod controller;
 pub mod cursor_theme;
 pub mod desktop;
+pub mod keys;
 pub mod license;
 pub mod license_window;
 pub mod mouse_watch;

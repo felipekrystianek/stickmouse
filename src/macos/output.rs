@@ -13,6 +13,7 @@ use objc2_core_graphics::{
 use objc2_app_kit::{NSEvent, NSEventModifierFlags, NSEventType};
 use objc2_foundation::NSPoint;
 
+use super::keys;
 use crate::engine::{Action, Key, MouseButton};
 
 /// Written into every event we post, so the real-mouse watcher can tell them apart.
@@ -21,16 +22,6 @@ pub const EVENT_MARK: i64 = 0x7061_6463;
 const UNITS_PER_PIXEL: i32 = 3;
 const DOUBLE_CLICK_DISTANCE: f64 = 4.0;
 const MAX_DISPLAYS: usize = 16;
-
-// Virtual key codes from Carbon's Events.h.
-const KEY_TAB: u16 = 0x30;
-const KEY_SPACE: u16 = 0x31;
-const KEY_ESCAPE: u16 = 0x35;
-const KEY_COMMAND: u16 = 0x37;
-const KEY_LEFT: u16 = 0x7B;
-const KEY_RIGHT: u16 = 0x7C;
-const KEY_DOWN: u16 = 0x7D;
-const KEY_UP: u16 = 0x7E;
 
 // Media keys from IOKit's ev_keymap.h, sent as system-defined events.
 const MEDIA_SOUND_UP: isize = 0;
@@ -41,11 +32,6 @@ const MEDIA_FAST: isize = 19;
 const MEDIA_REWIND: isize = 20;
 const SYSTEM_DEFINED_AUX_KEY: i16 = 8;
 
-enum Code {
-    Key(u16),
-    Media(isize),
-}
-
 #[derive(Clone, Copy)]
 struct Press {
     at: Instant,
@@ -55,7 +41,9 @@ struct Press {
 
 pub struct Output {
     source: CFRetained<CGEventSource>,
-    command_held: bool,
+    /// Modifiers held by shortcuts, and Command held by the app switcher.
+    modifiers: Vec<Key>,
+    switcher: bool,
     held: [bool; 3],
     last_press: [Option<Press>; 3],
     double_click: Duration,
@@ -68,7 +56,8 @@ impl Output {
             .ok_or_else(|| io::Error::other("could not create an event source"))?;
         Ok(Self {
             source,
-            command_held: false,
+            modifiers: Vec::new(),
+            switcher: false,
             held: [false; 3],
             last_press: [None; 3],
             double_click: Duration::from_secs_f64(NSEvent::doubleClickInterval()),
@@ -88,16 +77,30 @@ impl Output {
             }
             Action::KeyDown(key) => self.key(key, true),
             Action::KeyUp(key) => self.key(key, false),
-            // A lone Command tap does nothing on a Mac, so the launcher is Spotlight instead.
-            Action::Tap(Key::Meta) => {
-                self.key_code(KEY_COMMAND, true, CGEventFlags::MaskCommand)?;
-                self.key_code(KEY_SPACE, true, CGEventFlags::MaskCommand)?;
-                self.key_code(KEY_SPACE, false, CGEventFlags::MaskCommand)?;
-                self.key_code(KEY_COMMAND, false, self.flags())
-            }
             Action::Tap(key) => {
                 self.key(key, true)?;
                 self.key(key, false)
+            }
+            // Alt+Tab on Linux is Command+Tab on a Mac.
+            Action::SwitcherHold(held) => {
+                self.switcher = held;
+                self.flags_changed(Key::Meta)
+            }
+            Action::SwitcherNext => {
+                self.key_code(keys::TAB, true, self.flags())?;
+                self.key_code(keys::TAB, false, self.flags())
+            }
+            // A lone Command tap does nothing on a Mac, so the launcher is Spotlight instead.
+            Action::Launcher => {
+                let held = self.modifiers.contains(&Key::Meta);
+                self.modifiers.push(Key::Meta);
+                self.flags_changed(Key::Meta)?;
+                self.key_code(keys::SPACE, true, self.flags())?;
+                self.key_code(keys::SPACE, false, self.flags())?;
+                if !held {
+                    self.modifiers.retain(|m| *m != Key::Meta);
+                }
+                self.flags_changed(Key::Meta)
             }
             _ => Ok(()),
         }
@@ -188,20 +191,33 @@ impl Output {
     }
 
     fn key(&mut self, key: Key, down: bool) -> io::Result<()> {
-        match code(key) {
-            Code::Key(code) => {
-                // Alt+Tab on Linux is Command+Tab on a Mac.
-                if key == Key::Alt {
-                    self.command_held = down;
-                }
-                let mut flags = self.flags();
-                if matches!(key, Key::Up | Key::Down | Key::Left | Key::Right) {
-                    flags |= CGEventFlags::MaskSecondaryFn | CGEventFlags::MaskNumericPad;
-                }
+        if key.is_modifier() {
+            if down {
+                self.modifiers.push(key);
+            } else if let Some(index) = self.modifiers.iter().position(|m| *m == key) {
+                self.modifiers.remove(index);
+            }
+            return self.flags_changed(key);
+        }
+        match keys::code(key) {
+            Some(code) => {
+                let flags = CGEventFlags(self.flags().0 | keys::extra_flags(key));
                 self.key_code(code, down, flags)
             }
-            Code::Media(code) => media_key(code, down),
+            None => media_key(media_code(key), down),
         }
+    }
+
+    /// A real modifier key sends "flags changed", not key down or up. The app switcher, for one,
+    /// only stays open while it sees Command held this way.
+    fn flags_changed(&self, key: Key) -> io::Result<()> {
+        let code = keys::code(key).ok_or_else(event_error)?;
+        let event = CGEvent::new_keyboard_event(Some(&self.source), code, true)
+            .ok_or_else(event_error)?;
+        CGEvent::set_type(Some(&event), CGEventType::FlagsChanged);
+        CGEvent::set_flags(Some(&event), self.flags());
+        self.post(&event);
+        Ok(())
     }
 
     fn key_code(&self, code: u16, down: bool, flags: CGEventFlags) -> io::Result<()> {
@@ -213,7 +229,14 @@ impl Output {
     }
 
     fn flags(&self) -> CGEventFlags {
-        if self.command_held { CGEventFlags::MaskCommand } else { CGEventFlags(0) }
+        let mut flags = keys::NON_COALESCED;
+        for modifier in &self.modifiers {
+            flags |= keys::modifier_flag(*modifier);
+        }
+        if self.switcher {
+            flags |= keys::modifier_flag(Key::Meta);
+        }
+        CGEventFlags(flags)
     }
 
     fn post(&self, event: &CGEvent) {
@@ -242,22 +265,14 @@ fn media_key(code: isize, down: bool) -> io::Result<()> {
     Ok(())
 }
 
-fn code(key: Key) -> Code {
+fn media_code(key: Key) -> isize {
     match key {
-        Key::Up => Code::Key(KEY_UP),
-        Key::Down => Code::Key(KEY_DOWN),
-        Key::Left => Code::Key(KEY_LEFT),
-        Key::Right => Code::Key(KEY_RIGHT),
-        Key::Esc => Code::Key(KEY_ESCAPE),
-        Key::Alt => Code::Key(KEY_COMMAND),
-        Key::Tab => Code::Key(KEY_TAB),
-        Key::Meta => Code::Key(KEY_COMMAND),
-        Key::PlayPause => Code::Media(MEDIA_PLAY),
-        Key::NextTrack => Code::Media(MEDIA_FAST),
-        Key::PreviousTrack => Code::Media(MEDIA_REWIND),
-        Key::VolumeUp => Code::Media(MEDIA_SOUND_UP),
-        Key::VolumeDown => Code::Media(MEDIA_SOUND_DOWN),
-        Key::Mute => Code::Media(MEDIA_MUTE),
+        Key::NextTrack => MEDIA_FAST,
+        Key::PreviousTrack => MEDIA_REWIND,
+        Key::VolumeUp => MEDIA_SOUND_UP,
+        Key::VolumeDown => MEDIA_SOUND_DOWN,
+        Key::Mute => MEDIA_MUTE,
+        _ => MEDIA_PLAY,
     }
 }
 

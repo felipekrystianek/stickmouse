@@ -1,3 +1,4 @@
+mod bindings;
 mod config;
 mod engine;
 #[cfg(target_os = "linux")]
@@ -96,6 +97,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             match action {
                 Action::Steering(steering) => cursor.set_steering(steering),
                 Action::ToggleKeyboard => desktop::toggle_keyboard(),
+                Action::MissionControl => desktop::mission_control(),
                 Action::Rumble => send(&controller, ControllerCommand::Rumble),
                 Action::SetEnabled(value) => {
                     *enabled = value;
@@ -186,7 +188,7 @@ fn load_config() -> Config {
             let written = path
                 .parent()
                 .map_or(Ok(()), fs::create_dir_all)
-                .and_then(|()| fs::write(&path, config::DEFAULT_FILE));
+                .and_then(|()| fs::write(&path, Config::default().to_toml()));
             if let Err(error) = written {
                 eprintln!("padcursor: could not write {}: {error}", path.display());
             }

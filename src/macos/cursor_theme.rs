@@ -1,10 +1,11 @@
 //! The steering circle. macOS does not let a background app change the system cursor, so the
 //! circle is a small click-through window that follows the pointer.
 
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::io;
 use std::path::Path;
 use std::sync::{Mutex, Once};
+use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use objc2::{MainThreadMarker, MainThreadOnly};
@@ -73,21 +74,40 @@ pub fn set_scale(scale: f32) {
     }
 }
 
-thread_local! {
-    static POINTER_HIDDEN: Cell<bool> = const { Cell::new(false) };
+/// How often the arrow is hidden again while steering. Apps under a resting pointer can bring it
+/// back, for example when they change the cursor shape, and macOS offers no reliable way to ask
+/// whether it is visible (CGCursorIsVisible always answers false).
+const REHIDE_INTERVAL: Duration = Duration::from_millis(250);
+
+#[derive(Default)]
+struct PointerState {
+    /// Hides sent since the arrow was last shown. WindowServer counts them, so the same number
+    /// of shows brings the arrow back; shows beyond that are ignored.
+    hides: u32,
+    last_hide: Option<Instant>,
 }
 
-/// WindowServer counts hides and shows, so only call it when the state really changes.
+thread_local! {
+    static POINTER: RefCell<PointerState> = RefCell::default();
+}
+
 fn set_pointer_hidden(hidden: bool) {
-    if POINTER_HIDDEN.replace(hidden) == hidden {
-        return;
-    }
-    allow_hiding_in_background();
-    if hidden {
-        CGDisplayHideCursor(CGMainDisplayID());
-    } else {
-        CGDisplayShowCursor(CGMainDisplayID());
-    }
+    POINTER.with_borrow_mut(|pointer| {
+        if hidden {
+            if pointer.last_hide.is_some_and(|at| at.elapsed() < REHIDE_INTERVAL) {
+                return;
+            }
+            allow_hiding_in_background();
+            CGDisplayHideCursor(CGMainDisplayID());
+            pointer.hides += 1;
+            pointer.last_hide = Some(Instant::now());
+        } else {
+            for _ in 0..std::mem::take(&mut pointer.hides) {
+                CGDisplayShowCursor(CGMainDisplayID());
+            }
+            pointer.last_hide = None;
+        }
+    });
 }
 
 pub fn install(_icons_dir: &Path, scale: f32) -> io::Result<()> {
