@@ -5,16 +5,24 @@
 pub mod controller;
 pub mod cursor_theme;
 pub mod desktop;
+pub mod license;
+pub mod license_window;
 pub mod mouse_watch;
 pub mod output;
+pub mod permissions;
+pub mod settings;
+pub mod setup;
 pub mod tray;
+pub mod ui;
 
+use std::cell::Cell;
 use std::process::ExitCode;
 use std::ptr::NonNull;
 use std::thread;
 
 use block2::RcBlock;
 use objc2::MainThreadMarker;
+use objc2::runtime::ProtocolObject;
 use objc2_app_kit::{NSApplication, NSApplicationActivationPolicy};
 use objc2_foundation::{NSRunLoop, NSRunLoopCommonModes, NSTimer};
 use objc2_game_controller::GCController;
@@ -25,18 +33,34 @@ const POLL_INTERVAL: f64 = 0.004;
 /// Runs `work` on a worker thread while the main thread runs the AppKit event loop.
 /// The process exits when `work` returns.
 pub fn run_app(work: impl FnOnce() -> ExitCode + Send + 'static) -> ExitCode {
-    let mtm = MainThreadMarker::new().expect("padcursor must start on the main thread");
+    let mtm = MainThreadMarker::new().expect("Couchpad must start on the main thread");
     let app = NSApplication::sharedApplication(mtm);
     app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
+    app.setMainMenu(Some(&ui::main_menu(mtm)));
+    let actions = ui::actions(mtm);
+    app.setDelegate(Some(ProtocolObject::from_ref(&*actions)));
     // SAFETY: a plain class property; we never bring a window to the front, so without this the
     // controller would only be read while some other app is in front.
     unsafe { GCController::setShouldMonitorBackgroundEvents(true) };
 
-    let block = RcBlock::new(|_timer: NonNull<NSTimer>| {
+    let started = Cell::new(false);
+    let block = RcBlock::new(move |_timer: NonNull<NSTimer>| {
         let mtm = MainThreadMarker::new().expect("timers fire on the main thread");
-        controller::poll();
+        if !started.replace(true) {
+            license::revalidate_if_due();
+            if !setup::show_if_needed(mtm) && license::status() == license::Status::Expired {
+                license_window::show(mtm);
+            }
+        }
+        controller::poll(mtm);
         tray::refresh(mtm);
         cursor_theme::refresh(mtm);
+        if desktop::take_settings_request() {
+            settings::show(mtm);
+        }
+        settings::refresh();
+        setup::refresh();
+        license_window::refresh();
     });
     // SAFETY: the block only touches main-thread state and the timer runs on the main run loop.
     unsafe {

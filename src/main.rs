@@ -35,6 +35,9 @@ const LOW_BATTERY: &str = "Low";
 pub enum Message {
     Input(Input),
     Connected(bool),
+    /// New settings from the settings window. Only macOS has one.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    ConfigChanged(Config),
     OpenSettings,
     Quit,
 }
@@ -135,7 +138,8 @@ fn run() -> Result<(), Box<dyn Error>> {
                 next_battery_check = now;
                 low_battery_warned = false;
             }
-            Some(Message::OpenSettings) => open_settings(),
+            Some(Message::ConfigChanged(config)) => engine.set_config(config),
+            Some(Message::OpenSettings) => desktop::open_settings(),
             Some(Message::Quit) => break,
             None => {}
         }
@@ -194,12 +198,6 @@ fn load_config() -> Config {
         desktop::notify("padcursor settings have a mistake", "Using the default settings for now.");
         Config::default()
     })
-}
-
-fn open_settings() {
-    if let Err(error) = desktop::open_file(&desktop::config_file()) {
-        eprintln!("padcursor: could not open settings: {error}");
-    }
 }
 
 /// Two copies would fight over the controller, so only one may run. The kernel releases the lock on exit.

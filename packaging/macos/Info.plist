@@ -3,13 +3,15 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>padcursor</string>
+    <string>Couchpad</string>
     <key>CFBundleDisplayName</key>
-    <string>padcursor</string>
+    <string>Couchpad</string>
     <key>CFBundleIdentifier</key>
-    <string>io.github.felipekrystianek.padcursor</string>
+    <string>io.github.felipekrystianek.couchpad</string>
     <key>CFBundleExecutable</key>
-    <string>padcursor</string>
+    <string>Couchpad</string>
+    <key>CFBundleIconFile</key>
+    <string>couchpad</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
@@ -17,8 +19,10 @@
     <key>CFBundleShortVersionString</key>
     <string>VERSION</string>
     <key>LSMinimumSystemVersion</key>
-    <string>11.3</string>
+    <string>14.0</string>
     <!-- Menu bar only: no Dock icon and no app menu. -->
+    <key>NSHumanReadableCopyright</key>
+    <string>© 2026 Krystian Filipek. Xbox is a trademark of Microsoft; Couchpad is not affiliated with Microsoft.</string>
     <key>LSUIElement</key>
     <true/>
 </dict>

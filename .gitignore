@@ -2,3 +2,4 @@
 /packaging/pkg
 /packaging/src
 /packaging/*.pkg.tar.*
+/website/downloads

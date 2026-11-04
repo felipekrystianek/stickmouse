@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Mutex, OnceLock};
 
-use objc2::{AllocAnyThread, msg_send};
+use objc2::{AllocAnyThread, MainThreadMarker, msg_send};
 use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
 use objc2_core_haptics::{
@@ -18,6 +18,7 @@ use objc2_game_controller::{
     GCSystemGestureState,
 };
 
+use super::{license, license_window};
 use crate::Message;
 use crate::engine::{Axis, Button, Input};
 
@@ -61,6 +62,7 @@ struct Link {
 
 static LINK: OnceLock<Mutex<Link>> = OnceLock::new();
 static BATTERY: Mutex<Option<f32>> = Mutex::new(None);
+static NAME: Mutex<Option<String>> = Mutex::new(None);
 
 #[derive(Clone, Copy, Default, PartialEq)]
 struct State {
@@ -96,8 +98,13 @@ pub fn battery() -> Option<f32> {
     *BATTERY.lock().unwrap()
 }
 
+/// The connected controller's name, if one is connected.
+pub fn name() -> Option<String> {
+    NAME.lock().unwrap().clone()
+}
+
 /// Called on the main thread every few milliseconds.
-pub fn poll() {
+pub fn poll(mtm: MainThreadMarker) {
     let Some(link) = LINK.get() else {
         return;
     };
@@ -124,6 +131,14 @@ pub fn poll() {
             return;
         };
         let state = read(&pad);
+        if !license::allows_input() {
+            // The trial is over: the controller does nothing, and a button press offers a license.
+            if state.buttons.iter().zip(active.state.buttons).any(|(now, before)| *now && !before) {
+                license_window::nag(mtm);
+            }
+            active.state = state;
+            return;
+        }
         for (index, button) in BUTTONS.into_iter().enumerate() {
             if state.buttons[index] != active.state.buttons[index] {
                 let _ = link.messages.send(Message::Input(Input::Button(button, state.buttons[index])));
@@ -149,6 +164,7 @@ fn rescan(poller: &mut Poller, messages: &Sender<Message>) {
     if poller.active.is_some() && !still_there {
         poller.active = None;
         *BATTERY.lock().unwrap() = None;
+        *NAME.lock().unwrap() = None;
         eprintln!("padcursor: controller disconnected");
         let _ = messages.send(Message::Connected(false));
         let _ = messages.send(Message::Input(Input::Disconnected));
@@ -166,6 +182,7 @@ fn rescan(poller: &mut Poller, messages: &Sender<Message>) {
             }
             let name = controller.vendorName().map_or("unknown".to_string(), |n| n.to_string());
             eprintln!("padcursor: using controller {name:?}");
+            *NAME.lock().unwrap() = Some(name);
         }
         poller.active = Some(Active { controller, state: State::default(), haptics: None, player: None });
         let _ = messages.send(Message::Connected(true));

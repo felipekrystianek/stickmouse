@@ -1,5 +1,5 @@
 //! Sends mouse, keyboard and media key events with Quartz Event Services.
-//! Needs Accessibility access (System Settings, Privacy & Security, Accessibility).
+//! Needs Accessibility access; the setup window (setup.rs) walks the user through it.
 
 use std::io;
 use std::time::{Duration, Instant};
@@ -8,12 +8,11 @@ use objc2_core_foundation::{CFRetained, CGPoint, CGRect};
 use objc2_core_graphics::{
     CGDirectDisplayID, CGDisplayBounds, CGEvent, CGEventField, CGEventFlags, CGEventSource,
     CGEventSourceStateID, CGEventTapLocation, CGEventType, CGGetActiveDisplayList, CGMouseButton,
-    CGPreflightPostEventAccess, CGRequestPostEventAccess, CGScrollEventUnit,
+    CGScrollEventUnit,
 };
 use objc2_app_kit::{NSEvent, NSEventModifierFlags, NSEventType};
 use objc2_foundation::NSPoint;
 
-use super::desktop;
 use crate::engine::{Action, Key, MouseButton};
 
 /// Written into every event we post, so the real-mouse watcher can tell them apart.
@@ -65,13 +64,6 @@ pub struct Output {
 
 impl Output {
     pub fn new() -> io::Result<Self> {
-        if !CGPreflightPostEventAccess() {
-            CGRequestPostEventAccess();
-            desktop::notify(
-                "padcursor needs Accessibility access",
-                "Allow it in System Settings, Privacy & Security, Accessibility, then start padcursor again.",
-            );
-        }
         let source = CGEventSource::new(CGEventSourceStateID::HIDSystemState)
             .ok_or_else(|| io::Error::other("could not create an event source"))?;
         Ok(Self {

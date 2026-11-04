@@ -146,6 +146,12 @@ impl Engine {
         }
     }
 
+    /// Applies new settings while running. Held buttons and stick positions are kept.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    pub fn set_config(&mut self, config: Config) {
+        self.config = config;
+    }
+
     pub fn handle(&mut self, input: Input, now: Duration) -> Vec<Action> {
         match input {
             Input::Button(Button::Xbox, pressed) => self.xbox(pressed, now),

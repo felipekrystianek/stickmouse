@@ -7,16 +7,16 @@ use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use objc2::rc::Retained;
-use objc2::runtime::{AnyObject, Sel};
-use objc2::{MainThreadMarker, MainThreadOnly, define_class, msg_send, sel};
+use objc2::runtime::Sel;
+use objc2::{MainThreadMarker, MainThreadOnly, sel};
 use objc2_app_kit::{
     NSControlStateValueOff, NSControlStateValueOn, NSImage, NSMenu, NSMenuItem, NSStatusBar,
     NSStatusItem, NSVariableStatusItemLength,
 };
-use objc2_foundation::{NSObject, NSString};
+use objc2_foundation::NSString;
 
+use super::{license, ui};
 use crate::Message;
-use crate::engine::Input;
 
 pub struct Tray {
     pub enabled: bool,
@@ -65,49 +65,17 @@ pub fn spawn(enabled: bool, messages: Sender<Message>) -> Option<Handle> {
     Some(Handle(shared))
 }
 
-fn send(message: Message) {
+/// Sends a message to the padcursor loop on the worker thread.
+pub fn send(message: Message) {
     if let Some(shared) = SHARED.get() {
         let _ = shared.messages.send(message);
     }
 }
 
-define_class!(
-    // SAFETY: NSObject has no subclassing requirements and we add no ivars.
-    #[unsafe(super(NSObject))]
-    #[thread_kind = MainThreadOnly]
-    #[name = "PadcursorMenuTarget"]
-    struct MenuTarget;
-
-    impl MenuTarget {
-        #[unsafe(method(toggle:))]
-        fn toggle(&self, _sender: Option<&AnyObject>) {
-            send(Message::Input(Input::ToggleEnabled));
-        }
-
-        #[unsafe(method(openSettings:))]
-        fn open_settings(&self, _sender: Option<&AnyObject>) {
-            send(Message::OpenSettings);
-        }
-
-        #[unsafe(method(quit:))]
-        fn quit(&self, _sender: Option<&AnyObject>) {
-            send(Message::Quit);
-        }
-    }
-);
-
-impl MenuTarget {
-    fn new(mtm: MainThreadMarker) -> Retained<Self> {
-        let this = Self::alloc(mtm).set_ivars(());
-        // SAFETY: NSObject's init takes no arguments.
-        unsafe { msg_send![super(this), init] }
-    }
-}
-
 struct StatusBar {
     item: Retained<NSStatusItem>,
-    target: Retained<MenuTarget>,
     seen: u64,
+    license: Option<license::Status>,
 }
 
 thread_local! {
@@ -122,14 +90,16 @@ pub fn refresh(mtm: MainThreadMarker) {
     STATUS_BAR.with_borrow_mut(|bar| {
         let bar = bar.get_or_insert_with(|| StatusBar {
             item: NSStatusBar::systemStatusBar().statusItemWithLength(NSVariableStatusItemLength),
-            target: MenuTarget::new(mtm),
             seen: 0,
+            license: None,
         });
         let version = shared.version.load(Ordering::Relaxed);
-        if version == bar.seen {
+        let status = license::status();
+        if version == bar.seen && bar.license == Some(status) {
             return;
         }
         bar.seen = version;
+        bar.license = Some(status);
         let tray = shared.tray.lock().unwrap();
         redraw(mtm, bar, &tray);
     });
@@ -141,7 +111,7 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
         let symbol = if active { "gamecontroller.fill" } else { "gamecontroller" };
         let image = NSImage::imageWithSystemSymbolName_accessibilityDescription(
             &NSString::from_str(symbol),
-            Some(&NSString::from_str("padcursor")),
+            Some(&NSString::from_str("Couchpad")),
         );
         if let Some(image) = image {
             image.setTemplate(true);
@@ -155,34 +125,40 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
     }
 
     let menu = NSMenu::new(mtm);
-    menu.addItem(&item(mtm, &tray.status(), None, None));
-    menu.addItem(&item(mtm, &tray.battery_text(), None, None));
+    menu.addItem(&item(mtm, &tray.status(), None, ""));
+    menu.addItem(&item(mtm, &tray.battery_text(), None, ""));
+    match license::status() {
+        license::Status::Licensed => {}
+        license::Status::Trial { days_left } => {
+            menu.addItem(&item(mtm, &format!("Trial: {days_left} days left"), None, ""));
+        }
+        license::Status::Expired => menu.addItem(&item(mtm, "Trial ended", None, "")),
+    }
     menu.addItem(&NSMenuItem::separatorItem(mtm));
-    let enabled = item(mtm, "Enabled", Some(sel!(toggle:)), Some(&bar.target));
+    let enabled = item(mtm, "Enabled", Some(sel!(toggle:)), "");
     enabled.setState(if tray.enabled { NSControlStateValueOn } else { NSControlStateValueOff });
     menu.addItem(&enabled);
-    menu.addItem(&item(mtm, "Open settings", Some(sel!(openSettings:)), Some(&bar.target)));
-    menu.addItem(&item(mtm, "Quit", Some(sel!(quit:)), Some(&bar.target)));
+    menu.addItem(&item(mtm, "Settings…", Some(sel!(openSettings:)), ","));
+    menu.addItem(&item(mtm, "Setup & Permissions…", Some(sel!(openSetup:)), ""));
+    let license_title = if license::status() == license::Status::Licensed { "License…" } else { "Buy Couchpad…" };
+    menu.addItem(&item(mtm, license_title, Some(sel!(openLicense:)), ""));
+    menu.addItem(&NSMenuItem::separatorItem(mtm));
+    menu.addItem(&item(mtm, "Quit Couchpad", Some(sel!(quit:)), "q"));
     bar.item.setMenu(Some(&menu));
 }
 
 /// An item without an action shows greyed out, which suits the status lines.
-fn item(
-    mtm: MainThreadMarker,
-    title: &str,
-    action: Option<Sel>,
-    target: Option<&MenuTarget>,
-) -> Retained<NSMenuItem> {
-    // SAFETY: the selectors exist on MenuTarget, which outlives the menu.
+fn item(mtm: MainThreadMarker, title: &str, action: Option<Sel>, key: &str) -> Retained<NSMenuItem> {
+    // SAFETY: the selectors exist on ui::Actions, which lives for the whole process.
     unsafe {
         let item = NSMenuItem::initWithTitle_action_keyEquivalent(
             NSMenuItem::alloc(mtm),
             &NSString::from_str(title),
             action,
-            &NSString::new(),
+            &NSString::from_str(key),
         );
-        if let Some(target) = target {
-            item.setTarget(Some(target));
+        if action.is_some() {
+            item.setTarget(Some(&ui::actions(mtm)));
         }
         item
     }

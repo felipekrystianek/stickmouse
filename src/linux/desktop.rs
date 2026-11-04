@@ -2,7 +2,7 @@
 
 use std::fs;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::sync::mpsc::{Sender, channel};
 use std::thread::{self, JoinHandle};
@@ -186,6 +186,9 @@ pub fn battery_level() -> io::Result<Option<String>> {
     Ok(None)
 }
 
-pub fn open_file(path: &Path) -> io::Result<()> {
-    Command::new("xdg-open").arg(path).spawn().map(|_| ())
+/// Opens the settings file in the default text editor.
+pub fn open_settings() {
+    if let Err(error) = Command::new("xdg-open").arg(config_file()).spawn() {
+        eprintln!("padcursor: could not open settings: {error}");
+    }
 }

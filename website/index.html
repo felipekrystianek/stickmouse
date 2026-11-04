@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Couchpad – your game controller as a Mac mouse</title>
+<meta name="description" content="Couchpad turns your Xbox or PlayStation controller into a mouse and media remote for your Mac. Free 7-day trial, then $5 once.">
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f5f5f7;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --accent: #3a6df0;
+    --accent-text: #ffffff;
+    --border: #d2d2d7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111114;
+      --surface: #1c1c21;
+      --text: #f5f5f7;
+      --muted: #a1a1a6;
+      --accent: #5b8cff;
+      --border: #2e2e35;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+  header { text-align: center; padding: 72px 0 48px; }
+  header img { width: 128px; height: 128px; }
+  h1 { font-size: clamp(36px, 7vw, 56px); letter-spacing: -0.02em; margin: 16px 0 8px; }
+  .tagline { font-size: clamp(19px, 3vw, 24px); color: var(--muted); margin: 0 auto 32px; max-width: 640px; }
+  .buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .button {
+    display: inline-block; padding: 13px 26px; border-radius: 980px; font-weight: 600;
+    text-decoration: none; border: 1px solid var(--accent);
+  }
+  .primary { background: var(--accent); color: var(--accent-text); }
+  .secondary { color: var(--accent); }
+  .note { color: var(--muted); font-size: 14px; margin-top: 14px; }
+  section { padding: 48px 0; border-top: 1px solid var(--border); }
+  h2 { font-size: 32px; letter-spacing: -0.01em; margin: 0 0 24px; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: var(--surface); border-radius: 18px; padding: 22px; }
+  .card h3 { margin: 0 0 6px; font-size: 19px; }
+  .card p { margin: 0; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td:first-child { font-weight: 600; white-space: nowrap; width: 38%; }
+  .price { text-align: center; }
+  .price .amount { font-size: 64px; font-weight: 700; letter-spacing: -0.03em; }
+  .price ul { list-style: none; padding: 0; color: var(--muted); margin: 8px 0 28px; }
+  details { background: var(--surface); border-radius: 14px; padding: 16px 20px; margin-bottom: 10px; }
+  summary { font-weight: 600; cursor: pointer; }
+  details p { color: var(--muted); margin: 10px 0 0; }
+  footer { color: var(--muted); font-size: 13px; text-align: center; padding: 32px 0 48px; border-top: 1px solid var(--border); }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icon.png" alt="Couchpad icon">
+    <h1>Couchpad</h1>
+    <p class="tagline">Your game controller is now a mouse and media remote for your Mac. Browse, watch and listen from the couch.</p>
+    <div class="buttons">
+      <a class="button primary" href="downloads/Couchpad.dmg">Download free trial</a>
+      <a class="button secondary" href="#buy">Buy – $5</a>
+    </div>
+    <p class="note">For macOS 14 Sonoma or later. Works with Xbox, PlayStation and other controllers.</p>
+  </header>
+
+  <section>
+    <h2>Everything from the couch</h2>
+    <div class="grid">
+      <div class="card"><h3>Smooth pointer</h3><p>The left stick moves the pointer with a gentle curve for precise aiming. Click the stick for a slower, precise mode.</p></div>
+      <div class="card"><h3>Scrolling</h3><p>The right stick scrolls pages, lists and timelines, up, down and sideways.</p></div>
+      <div class="card"><h3>Media keys</h3><p>Play, pause, skip tracks, change the volume and mute, without reaching for the keyboard.</p></div>
+      <div class="card"><h3>Switch apps</h3><p>One button cycles through your open apps, like ⌘ Tab.</p></div>
+      <div class="card"><h3>Always out of the way</h3><p>A small circle shows while you steer and disappears as soon as you touch the real mouse.</p></div>
+      <div class="card"><h3>Lives in the menu bar</h3><p>No Dock icon. Turn it on or off by holding the controller's home button for a second.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Button layout</h2>
+    <table>
+      <tr><td>Left stick</td><td>Move the pointer (click it for precise mode)</td></tr>
+      <tr><td>Right stick</td><td>Scroll (click it to mute)</td></tr>
+      <tr><td>A / ✕</td><td>Click, hold to drag</td></tr>
+      <tr><td>B / ○</td><td>Right click, hold for Esc</td></tr>
+      <tr><td>X / □</td><td>Middle click</td></tr>
+      <tr><td>Y / △</td><td>On-screen keyboard</td></tr>
+      <tr><td>D-pad</td><td>Arrow keys</td></tr>
+      <tr><td>Bumpers</td><td>Previous and next track</td></tr>
+      <tr><td>Triggers</td><td>Volume down and up</td></tr>
+      <tr><td>Menu / Options</td><td>Play and pause</td></tr>
+      <tr><td>View / Share</td><td>Switch apps</td></tr>
+      <tr><td>Home button</td><td>Spotlight, hold to turn Couchpad on or off</td></tr>
+    </table>
+    <p class="note">Speeds, deadzone and timings can be changed in Couchpad's settings.</p>
+  </section>
+
+  <section id="buy" class="price">
+    <h2>Simple pricing</h2>
+    <div class="amount">$5</div>
+    <ul>
+      <li>One payment, no subscription</li>
+      <li>Free 7-day trial with every feature</li>
+      <li>Taxes handled at checkout</li>
+    </ul>
+    <!-- Replace with the Polar checkout link for the Couchpad product. -->
+    <a class="button primary" href="https://buy.polar.sh/REPLACE_WITH_CHECKOUT_LINK">Buy Couchpad</a>
+    <p class="note">Your license key arrives by email. Paste it in Couchpad, menu bar icon › Buy Couchpad.</p>
+  </section>
+
+  <section>
+    <h2>Questions</h2>
+    <details>
+      <summary>macOS says Couchpad cannot be opened</summary>
+      <p>Couchpad is not distributed through the App Store. Open System Settings › Privacy &amp; Security, scroll down and click "Open Anyway" next to Couchpad. You only need to do this once.</p>
+    </details>
+    <details>
+      <summary>Why does Couchpad need Accessibility access?</summary>
+      <p>macOS only lets apps with Accessibility access move the pointer, click and press keys. Couchpad uses it for nothing else, and it never connects to the internet except to check your license key.</p>
+    </details>
+    <details>
+      <summary>Which controllers work?</summary>
+      <p>Any controller macOS supports: Xbox Wireless, Xbox Elite, PlayStation DualShock 4 and DualSense, and most MFi controllers, over Bluetooth or USB.</p>
+    </details>
+    <details>
+      <summary>Will games still see my controller?</summary>
+      <p>Yes. Hold the home button for a second to turn Couchpad off while you play, and again to turn it back on.</p>
+    </details>
+    <details>
+      <summary>Can I use my license on more than one Mac?</summary>
+      <p>Yes, one license works on up to 3 of your Macs.</p>
+    </details>
+  </section>
+
+  <footer>
+    © 2026 Krystian Filipek ·
+    <a href="THIRD_PARTY_LICENSES.html">Open-source licenses</a><br>
+    Xbox is a trademark of Microsoft Corporation. PlayStation and DualSense are trademarks of Sony Interactive Entertainment.
+    Couchpad is not affiliated with or endorsed by Microsoft or Sony.
+  </footer>
+</div>
+</body>
+</html>

@@ -1,9 +1,9 @@
 //! Files, notifications, battery and the on-screen keyboard on macOS.
 
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 
 use super::controller;
@@ -14,7 +14,7 @@ const KEYBOARD_PROCESS: &str = "Assistive Control";
 const KEYBOARD_APP: &str = "/System/Library/Input Methods/Assistive Control.app";
 
 pub fn state_dir() -> PathBuf {
-    home().join("Library/Application Support/padcursor")
+    home().join("Library/Application Support/Couchpad")
 }
 
 pub fn config_file() -> PathBuf {
@@ -74,7 +74,7 @@ pub fn toggle_keyboard() {
 
 pub fn notify(title: &str, body: &str) {
     let script = format!(
-        "display notification {} with title \"padcursor\" subtitle {}",
+        "display notification {} with title \"Couchpad\" subtitle {}",
         applescript_string(body),
         applescript_string(title)
     );
@@ -97,8 +97,15 @@ pub fn battery_level() -> io::Result<Option<String>> {
     }))
 }
 
-pub fn open_file(path: &Path) -> io::Result<()> {
-    Command::new("open").arg("-t").arg(path).spawn().map(|_| ())
+static SETTINGS_REQUESTED: AtomicBool = AtomicBool::new(false);
+
+/// Asks the main thread to show the settings window.
+pub fn open_settings() {
+    SETTINGS_REQUESTED.store(true, Ordering::Relaxed);
+}
+
+pub fn take_settings_request() -> bool {
+    SETTINGS_REQUESTED.swap(false, Ordering::Relaxed)
 }
 
 #[cfg(test)]

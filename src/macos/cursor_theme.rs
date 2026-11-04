@@ -1,10 +1,10 @@
 //! The steering circle. macOS does not let a background app change the system cursor, so the
 //! circle is a small click-through window that follows the pointer.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::io;
 use std::path::Path;
-use std::sync::Mutex;
+use std::sync::{Mutex, Once};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use objc2::{MainThreadMarker, MainThreadOnly};
@@ -13,7 +13,8 @@ use objc2_app_kit::{
     NSBackingStoreType, NSColor, NSEvent, NSScreenSaverWindowLevel, NSWindow,
     NSWindowCollectionBehavior, NSWindowStyleMask,
 };
-use objc2_core_foundation::{CGPoint, CGRect, CGSize};
+use objc2_core_foundation::{CFBoolean, CFString, CGPoint, CGRect, CGSize, kCFBooleanTrue};
+use objc2_core_graphics::{CGDisplayHideCursor, CGDisplayShowCursor, CGMainDisplayID};
 use objc2_foundation::{NSPoint, NSRect, NSSize};
 use objc2_quartz_core::CALayer;
 
@@ -32,6 +33,63 @@ thread_local! {
     static OVERLAY: RefCell<Option<(Retained<NSWindow>, f64)>> = const { RefCell::new(None) };
 }
 
+// Private WindowServer calls. Without them macOS only lets the frontmost app hide the pointer,
+// and padcursor is never frontmost. WindowServer shows the pointer again if padcursor exits.
+#[link(name = "CoreGraphics", kind = "framework")]
+unsafe extern "C" {
+    fn _CGSDefaultConnection() -> i32;
+    fn CGSSetConnectionProperty(
+        connection: i32,
+        target: i32,
+        key: &CFString,
+        value: &CFBoolean,
+    ) -> i32;
+}
+
+fn allow_hiding_in_background() {
+    static DONE: Once = Once::new();
+    DONE.call_once(|| {
+        // SAFETY: plain calls into WindowServer with valid CF objects.
+        unsafe {
+            let connection = _CGSDefaultConnection();
+            let key = CFString::from_static_str("SetsCursorInBackground");
+            if let Some(yes) = kCFBooleanTrue {
+                CGSSetConnectionProperty(connection, connection, &key, yes);
+            }
+        }
+    });
+}
+
+/// Changes the circle size; the window is rebuilt the next time it shows.
+pub fn set_scale(scale: f32) {
+    let mut current = SCALE.lock().unwrap();
+    if *current != scale {
+        *current = scale;
+        OVERLAY.with_borrow_mut(|overlay| {
+            if let Some((window, _)) = overlay.take() {
+                window.orderOut(None);
+            }
+        });
+    }
+}
+
+thread_local! {
+    static POINTER_HIDDEN: Cell<bool> = const { Cell::new(false) };
+}
+
+/// WindowServer counts hides and shows, so only call it when the state really changes.
+fn set_pointer_hidden(hidden: bool) {
+    if POINTER_HIDDEN.replace(hidden) == hidden {
+        return;
+    }
+    allow_hiding_in_background();
+    if hidden {
+        CGDisplayHideCursor(CGMainDisplayID());
+    } else {
+        CGDisplayShowCursor(CGMainDisplayID());
+    }
+}
+
 pub fn install(_icons_dir: &Path, scale: f32) -> io::Result<()> {
     *SCALE.lock().unwrap() = scale;
     Ok(())
@@ -47,6 +105,7 @@ pub fn refresh(mtm: MainThreadMarker) {
             {
                 window.orderOut(None);
             }
+            set_pointer_hidden(false);
             return;
         }
         let (window, size) = overlay.get_or_insert_with(|| make_window(mtm));
@@ -55,6 +114,8 @@ pub fn refresh(mtm: MainThreadMarker) {
         if !window.isVisible() {
             window.orderFrontRegardless();
         }
+        // The circle's centre dot takes the place of the arrow, as on Linux.
+        set_pointer_hidden(true);
     });
 }
 

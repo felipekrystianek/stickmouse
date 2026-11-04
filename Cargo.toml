@@ -25,6 +25,8 @@ objc2-core-haptics = "0.3"
 objc2-foundation = "0.3"
 objc2-game-controller = { version = "0.3", features = ["objc2-core-haptics"] }
 objc2-quartz-core = "0.3"
+objc2-service-management = "0.3"
+serde_json = "1"
 
 [profile.release]
 lto = "thin"

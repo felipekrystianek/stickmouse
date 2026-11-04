@@ -2,11 +2,11 @@
 
 use std::time::Duration;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub const DEFAULT_FILE: &str = include_str!("../packaging/config.toml");
 
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Config {
     pub pointer_speed: f32,
@@ -45,6 +45,26 @@ impl Default for Config {
 impl Config {
     pub fn parse(text: &str) -> Result<Self, toml::de::Error> {
         toml::from_str(text)
+    }
+
+    /// The settings as a file: the shipped file with its comments, with these values filled in.
+    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+    pub fn to_toml(&self) -> String {
+        let values = toml::Table::try_from(self).expect("settings always serialize");
+        let mut text = String::new();
+        for line in DEFAULT_FILE.lines() {
+            let key = line.split_once(" = ").map(|(key, _)| key);
+            match key.and_then(|key| Some((key, values.get(key)?))) {
+                Some((key, toml::Value::Float(value))) => {
+                    // Settings are f32, so print them as f32 to avoid 0.30000001192092896.
+                    text.push_str(&format!("{key} = {:?}", *value as f32));
+                }
+                Some((key, value)) => text.push_str(&format!("{key} = {value}")),
+                None => text.push_str(line),
+            }
+            text.push('\n');
+        }
+        text
     }
 
     pub fn b_hold(&self) -> Duration {
@@ -87,6 +107,18 @@ mod tests {
         let parsed = Config::parse("pointer_speed = 900.0").unwrap();
         assert_eq!(parsed.pointer_speed, 900.0);
         assert_eq!(parsed.b_hold_ms, Config::default().b_hold_ms);
+    }
+
+    #[test]
+    fn default_settings_write_the_shipped_file() {
+        assert_eq!(Config::default().to_toml(), DEFAULT_FILE);
+    }
+
+    #[test]
+    fn written_settings_read_back_the_same() {
+        let config = Config { pointer_speed: 2200.0, precise_factor: 0.45, b_hold_ms: 650, ..Config::default() };
+        let parsed = Config::parse(&config.to_toml()).unwrap();
+        assert_eq!(format!("{parsed:?}"), format!("{config:?}"));
     }
 
     #[test]

@@ -1,0 +1,18 @@
+Installing Couchpad
+===================
+
+1. Drag Couchpad to the Applications folder.
+2. Open Couchpad from Applications.
+
+If macOS says Couchpad "cannot be opened" or "could not be verified":
+open System Settings > Privacy & Security, scroll down and click "Open Anyway"
+next to Couchpad, then confirm. You only need to do this once.
+
+3. Couchpad asks for Accessibility access so it can move the pointer.
+   Click "Open Settings" and switch on Couchpad, then click "Restart Now".
+
+Couchpad is free for 7 days. Buy a license for $5 from the Couchpad menu
+(the controller icon in the menu bar) > Buy Couchpad.
+
+Xbox is a trademark of Microsoft Corporation. Couchpad is not affiliated
+with or endorsed by Microsoft.
