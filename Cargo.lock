@@ -637,29 +637,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "padcursor"
-version = "0.1.0"
-dependencies = [
- "block2",
- "evdev",
- "ksni",
- "libc",
- "objc2",
- "objc2-app-kit",
- "objc2-core-foundation",
- "objc2-core-graphics",
- "objc2-core-haptics",
- "objc2-foundation",
- "objc2-game-controller",
- "objc2-quartz-core",
- "objc2-service-management",
- "serde",
- "serde_json",
- "signal-hook",
- "toml",
-]
-
-[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -832,6 +809,29 @@ checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
  "windows-sys",
+]
+
+[[package]]
+name = "stickmouse"
+version = "0.1.0"
+dependencies = [
+ "block2",
+ "evdev",
+ "ksni",
+ "libc",
+ "objc2",
+ "objc2-app-kit",
+ "objc2-core-foundation",
+ "objc2-core-graphics",
+ "objc2-core-haptics",
+ "objc2-foundation",
+ "objc2-game-controller",
+ "objc2-quartz-core",
+ "objc2-service-management",
+ "serde",
+ "serde_json",
+ "signal-hook",
+ "toml",
 ]
 
 [[package]]

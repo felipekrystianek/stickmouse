@@ -7,7 +7,9 @@ use evdev::{AttributeSet, EventType, InputEvent, KeyCode, RelativeAxisCode};
 
 use crate::engine::{Action, Key, MouseButton};
 
-pub const DEVICE_PREFIX: &str = "padcursor";
+pub const DEVICE_PREFIX: &str = "Stickmouse";
+/// The prefix used before the rename, so devices left by a still-running old copy are not mistaken for real mice.
+pub const OLD_DEVICE_PREFIX: &str = "padcursor";
 const WHEEL_NOTCH: i32 = 120;
 pub struct Output {
     mouse: VirtualDevice,

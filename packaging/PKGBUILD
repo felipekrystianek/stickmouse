@@ -1,5 +1,5 @@
 # Builds from this checkout: run `makepkg -si` in the packaging directory.
-pkgname=padcursor
+pkgname=stickmouse
 pkgver=0.1.0
 pkgrel=1
 pkgdesc="Use an Xbox controller as a mouse and media remote on KDE Plasma"
@@ -8,7 +8,11 @@ license=('MIT')
 depends=('gcc-libs' 'glibc' 'kconfig' 'libnotify' 'plasma-keyboard' 'plasma-workspace' 'qt6-tools' 'xdg-utils')
 optdepends=('xpadneo-dkms: Bluetooth support, including holding the Xbox button')
 makedepends=('rust')
-install=padcursor.install
+# Stickmouse used to be called padcursor; these let pacman swap the old package out.
+provides=('padcursor')
+conflicts=('padcursor')
+replaces=('padcursor')
+install=stickmouse.install
 options=('!debug')
 
 build() {
@@ -24,7 +28,7 @@ check() {
 }
 
 package() {
-    install -Dm755 "$srcdir/target/release/padcursor" "$pkgdir/usr/bin/padcursor"
-    install -Dm644 "$startdir/padcursor.service" "$pkgdir/usr/lib/systemd/user/padcursor.service"
-    install -Dm644 "$startdir/padcursor-modprobe.conf" "$pkgdir/usr/lib/modprobe.d/padcursor.conf"
+    install -Dm755 "$srcdir/target/release/stickmouse" "$pkgdir/usr/bin/stickmouse"
+    install -Dm644 "$startdir/stickmouse.service" "$pkgdir/usr/lib/systemd/user/stickmouse.service"
+    install -Dm644 "$startdir/stickmouse-modprobe.conf" "$pkgdir/usr/lib/modprobe.d/stickmouse.conf"
 }

@@ -1,0 +1,23 @@
+post_install() {
+    # Takes effect now, without reloading the driver. The modprobe file keeps it after a reboot.
+    param=/sys/module/hid_xpadneo/parameters/disable_shift_mode
+    [ -w "$param" ] && echo 1 > "$param"
+    echo "Start Stickmouse now, and at every login, with:"
+    echo "  systemctl --user daemon-reload && systemctl --user enable --now stickmouse"
+    # Replacing padcursor counts as a new install. Its login link outlives its unit file.
+    echo "If you used padcursor before, turn it off first (your settings carry over):"
+    echo "  systemctl --user disable --now padcursor"
+}
+
+post_upgrade() {
+    param=/sys/module/hid_xpadneo/parameters/disable_shift_mode
+    [ -w "$param" ] && echo 1 > "$param"
+    echo "Restart Stickmouse to use the new version:"
+    echo "  systemctl --user daemon-reload && systemctl --user restart stickmouse"
+}
+
+pre_remove() {
+    param=/sys/module/hid_xpadneo/parameters/disable_shift_mode
+    [ -w "$param" ] && echo 0 > "$param"
+    echo "Stop Stickmouse if it is still running: systemctl --user disable --now stickmouse"
+}

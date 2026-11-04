@@ -16,7 +16,7 @@ cargo build --release
 app=target/release/Stickmouse.app
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp target/release/padcursor "$app/Contents/MacOS/Stickmouse"
+cp target/release/stickmouse "$app/Contents/MacOS/Stickmouse"
 cp packaging/macos/stickmouse.icns "$app/Contents/Resources/stickmouse.icns"
 cp packaging/macos/THIRD_PARTY_LICENSES.html "$app/Contents/Resources/"
 sed "s/VERSION/$version/g" packaging/macos/Info.plist > "$app/Contents/Info.plist"

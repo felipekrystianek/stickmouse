@@ -40,11 +40,11 @@ impl ksni::Tray for Tray {
     const MENU_ON_ACTIVATE: bool = false;
 
     fn id(&self) -> String {
-        "padcursor".into()
+        "stickmouse".into()
     }
 
     fn title(&self) -> String {
-        "padcursor".into()
+        "Stickmouse".into()
     }
 
     fn icon_name(&self) -> String {
@@ -57,7 +57,7 @@ impl ksni::Tray for Tray {
 
     fn tool_tip(&self) -> ToolTip {
         ToolTip {
-            title: format!("padcursor: {}", self.status()),
+            title: format!("Stickmouse: {}", self.status()),
             description: self.battery_text(),
             ..Default::default()
         }
@@ -107,7 +107,7 @@ impl ksni::Tray for Tray {
     }
 }
 
-/// Starts the tray. padcursor keeps working without one, so a failure here isn't fatal.
+/// Starts the tray. Stickmouse keeps working without one, so a failure here isn't fatal.
 pub fn spawn(enabled: bool, messages: Sender<Message>) -> Option<Handle> {
     let tray = Tray { enabled, connected: false, battery: None, messages };
     match tray.spawn() {

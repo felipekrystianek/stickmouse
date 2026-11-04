@@ -8,7 +8,7 @@ use std::time::{Duration, Instant};
 
 use evdev::{Device, EventSummary, KeyCode, RelativeAxisCode};
 
-use super::output::DEVICE_PREFIX;
+use super::output::{DEVICE_PREFIX, OLD_DEVICE_PREFIX};
 use crate::Message;
 use crate::engine::Input;
 
@@ -49,7 +49,8 @@ fn find_mice() -> Vec<Device> {
 
 fn is_real_mouse(device: &Device) -> bool {
     // Skips our own virtual mouse and the mouse device xpadneo creates for the controller.
-    if device.name().is_some_and(|name| name.starts_with(DEVICE_PREFIX) || name.contains("Xbox")) {
+    let ours = |name: &str| name.starts_with(DEVICE_PREFIX) || name.starts_with(OLD_DEVICE_PREFIX);
+    if device.name().is_some_and(|name| ours(name) || name.contains("Xbox")) {
         return false;
     }
     let moves = device.supported_relative_axes().is_some_and(|axes| {

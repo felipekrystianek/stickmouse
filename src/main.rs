@@ -56,19 +56,24 @@ fn start() -> ExitCode {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
             eprintln!("padcursor: {error}");
-            desktop::notify("padcursor could not start", &error.to_string());
+            desktop::notify("Stickmouse could not start", &error.to_string());
             ExitCode::FAILURE
         }
     }
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
+    // Before anything creates the new folders, which would make the copy skip them.
+    #[cfg(target_os = "linux")]
+    linux::migrate::old_settings();
     fs::create_dir_all(desktop::state_dir())?;
     let _lock = lock_single_instance()?;
     let config = load_config();
 
     desktop::restore_cursor();
     cursor_theme::install(&desktop::icons_dir(), config.circle_scale)?;
+    #[cfg(target_os = "linux")]
+    linux::migrate::old_cursor_theme(&desktop::icons_dir());
 
     let enabled_file = desktop::state_dir().join("enabled");
     let enabled = fs::read_to_string(&enabled_file).map_or(true, |text| text.trim() != "false");
@@ -197,7 +202,7 @@ fn load_config() -> Config {
     };
     Config::parse(&text).unwrap_or_else(|error| {
         eprintln!("padcursor: {}: {error}", path.display());
-        desktop::notify("padcursor settings have a mistake", "Using the default settings for now.");
+        desktop::notify("Stickmouse settings have a mistake", "Using the default settings for now.");
         Config::default()
     })
 }
@@ -207,7 +212,7 @@ fn lock_single_instance() -> Result<File, Box<dyn Error>> {
     let file = File::create(desktop::state_dir().join("lock"))?;
     // SAFETY: the file descriptor is valid for as long as `file` is alive.
     if unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } != 0 {
-        return Err("padcursor is already running".into());
+        return Err("Stickmouse is already running".into());
     }
     Ok(file)
 }

@@ -7,23 +7,29 @@ use std::process::{Command, Stdio};
 use std::sync::mpsc::{Sender, channel};
 use std::thread::{self, JoinHandle};
 
-use super::cursor_theme::THEME_NAME;
+use super::cursor_theme::{OLD_THEME_NAME, THEME_NAME};
 
+/// The folder name under the XDG config and state directories.
+pub const APP_DIR: &str = "stickmouse";
 const FALLBACK_THEME: &str = "breeze_cursors";
 const VIRTUAL_KEYBOARD: &str = "org.kde.kwin.VirtualKeyboard";
 
+/// Where per-user state lives, such as `~/.local/state`, shared by all apps.
+pub fn state_home() -> PathBuf {
+    std::env::var_os("XDG_STATE_HOME").map_or_else(|| home().join(".local/state"), PathBuf::from)
+}
+
+/// Where per-user settings live, such as `~/.config`, shared by all apps.
+pub fn config_home() -> PathBuf {
+    std::env::var_os("XDG_CONFIG_HOME").map_or_else(|| home().join(".config"), PathBuf::from)
+}
+
 pub fn state_dir() -> PathBuf {
-    std::env::var_os("XDG_STATE_HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| home().join(".local/state"))
-        .join("padcursor")
+    state_home().join(APP_DIR)
 }
 
 pub fn config_file() -> PathBuf {
-    std::env::var_os("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| home().join(".config"))
-        .join("padcursor/config.toml")
+    config_home().join(APP_DIR).join("config.toml")
 }
 
 pub fn icons_dir() -> PathBuf {
@@ -39,7 +45,7 @@ fn saved_theme_file() -> PathBuf {
     state_dir().join("original-cursor-theme")
 }
 
-fn current_theme() -> Option<String> {
+pub fn current_theme() -> Option<String> {
     let output = Command::new("kreadconfig6")
         .args(["--file", "kcminputrc", "--group", "Mouse", "--key", "cursorTheme"])
         .output()
@@ -67,7 +73,7 @@ fn show_circle() {
     let Some(current) = current_theme() else {
         return;
     };
-    if current == THEME_NAME {
+    if is_circle(&current) {
         return;
     }
     // Saved first, so a crash while the circle is showing can still be undone.
@@ -78,9 +84,15 @@ fn show_circle() {
     apply_theme(THEME_NAME);
 }
 
-/// Puts the user's own cursor back if the circle is showing. Also runs after a crash.
+/// Whether `theme` is the circle, under its current or its pre-rename name.
+fn is_circle(theme: &str) -> bool {
+    theme == THEME_NAME || theme == OLD_THEME_NAME
+}
+
+/// Puts the user's own cursor back if the circle is showing. Also runs after a crash, and after
+/// an upgrade from padcursor that happened while its circle was showing.
 pub fn restore_cursor() {
-    if current_theme().as_deref() != Some(THEME_NAME) {
+    if !current_theme().is_some_and(|theme| is_circle(&theme)) {
         return;
     }
     let saved = fs::read_to_string(saved_theme_file()).unwrap_or_default();
@@ -174,7 +186,7 @@ pub fn mission_control() {
 
 pub fn notify(title: &str, body: &str) {
     let spawned = Command::new("notify-send")
-        .args(["-a", "padcursor", "-i", "input-gamepad", title, body])
+        .args(["-a", "Stickmouse", "-i", "input-gamepad", title, body])
         .spawn();
     match spawned {
         Ok(mut child) => {

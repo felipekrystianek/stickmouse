@@ -5,7 +5,9 @@ use std::io;
 use std::os::unix::fs::symlink;
 use std::path::Path;
 
-pub const THEME_NAME: &str = "padcursor-circle";
+pub const THEME_NAME: &str = "stickmouse-circle";
+/// The theme's name before the rename. It may still be the active theme right after an upgrade.
+pub const OLD_THEME_NAME: &str = "padcursor-circle";
 
 const NOMINAL_SIZES: [u32; 4] = [24, 36, 48, 72];
 const REFERENCE_SHAPES: &str = "/usr/share/icons/breeze_cursors/cursors";
@@ -47,7 +49,7 @@ pub fn install(icons_dir: &Path, scale: f32) -> io::Result<()> {
 
     fs::write(
         root.join("index.theme"),
-        format!("[Icon Theme]\nName={THEME_NAME}\nComment=padcursor steering cursor\n"),
+        format!("[Icon Theme]\nName={THEME_NAME}\nComment=Stickmouse steering cursor\n"),
     )
 }
 

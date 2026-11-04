@@ -3,6 +3,7 @@
 pub mod controller;
 pub mod cursor_theme;
 pub mod desktop;
+pub mod migrate;
 pub mod mouse_watch;
 pub mod output;
 pub mod tray;

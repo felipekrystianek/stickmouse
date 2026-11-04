@@ -4,8 +4,8 @@ PartOf=graphical-session.target
 After=graphical-session.target
 
 [Service]
-ExecStart=/usr/bin/padcursor
-ExecStopPost=/usr/bin/padcursor --restore-cursor
+ExecStart=/usr/bin/stickmouse
+ExecStopPost=/usr/bin/stickmouse --restore-cursor
 Restart=on-failure
 RestartSec=3
 

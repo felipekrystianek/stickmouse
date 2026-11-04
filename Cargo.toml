@@ -1,5 +1,5 @@
 [package]
-name = "padcursor"
+name = "stickmouse"
 version = "0.1.0"
 edition = "2024"
 description = "Use an Xbox controller as a mouse and media remote on KDE Plasma and macOS"

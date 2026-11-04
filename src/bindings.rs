@@ -77,7 +77,7 @@ const KEY_ALIASES: [(&str, Key); 9] = [
 ];
 
 impl Key {
-    /// Every key padcursor can press, for registering the virtual keyboard.
+    /// Every key Stickmouse can press, for registering the virtual keyboard.
     pub fn all() -> Vec<Key> {
         let mut keys: Vec<Key> = NAMED_KEYS.iter().map(|(key, _)| *key).collect();
         keys.extend((b'a'..=b'z').map(Key::Letter));
@@ -353,7 +353,7 @@ pub enum Control {
     DpadDown,
     DpadLeft,
     DpadRight,
-    /// Its press can be changed; holding it always turns padcursor on or off.
+    /// Its press can be changed; holding it always turns Stickmouse on or off.
     Xbox,
 }
 

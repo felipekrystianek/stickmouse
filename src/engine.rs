@@ -110,7 +110,7 @@ pub struct Engine {
     steering: bool,
     last_steer: Duration,
     real_mouse_at: Option<Duration>,
-    /// Which controls are down, as far as padcursor acted on them.
+    /// Which controls are down, as far as Stickmouse acted on them.
     pressed: [bool; CONTROLS],
     /// When a control with a hold action went down, until it is released or the hold happens.
     pending: [Option<Duration>; CONTROLS],
@@ -212,7 +212,7 @@ impl Engine {
         std::mem::take(&mut self.actions)
     }
 
-    /// Holding the Xbox button always toggles padcursor; a short press runs its command.
+    /// Holding the Xbox button always toggles Stickmouse; a short press runs its command.
     fn xbox(&mut self, pressed: bool, now: Duration) {
         if pressed {
             self.xbox_down_at = Some(now);
