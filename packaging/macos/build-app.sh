@@ -48,4 +48,9 @@ echo "Built $dmg"
 mkdir -p website/downloads
 cp "$dmg" website/downloads/Stickmouse.dmg
 cp packaging/macos/THIRD_PARTY_LICENSES.html website/
+# The app checks this file once a day to offer updates (src/macos/update.rs). It is committed,
+# unlike the downloads, so publishing the website announces the new version.
+cat > website/version.json <<EOF
+{"version": "$version", "url": "https://stickmouse.app/downloads/Stickmouse.dmg", "notes": ""}
+EOF
 echo "Copied to website/"

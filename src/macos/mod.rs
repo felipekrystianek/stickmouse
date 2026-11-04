@@ -17,6 +17,7 @@ pub mod settings;
 pub mod setup;
 pub mod tray;
 pub mod ui;
+pub mod update;
 
 use std::cell::Cell;
 use std::process::ExitCode;
@@ -56,6 +57,7 @@ pub fn run_app(work: impl FnOnce() -> ExitCode + Send + 'static) -> ExitCode {
             }
         }
         controller::poll(mtm);
+        update::check_if_due();
         tray::refresh(mtm);
         cursor_theme::refresh(mtm);
         if desktop::take_settings_request() {

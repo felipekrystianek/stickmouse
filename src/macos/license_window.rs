@@ -21,6 +21,7 @@ struct Window {
     title: Retained<NSTextField>,
     detail: Retained<NSTextField>,
     buy: Retained<NSButton>,
+    deactivate: Retained<NSButton>,
     entry: Retained<NSStackView>,
     key: Retained<NSTextField>,
     message: Retained<NSTextField>,
@@ -77,14 +78,25 @@ fn build(mtm: MainThreadMarker) -> Window {
     ui::fixed_width(&key, WIDTH - 100.0);
     let entry = ui::hstack(mtm, &[&key, &ui::button(mtm, "Activate", sel!(activateLicense:))], 8.0);
     let message = ui::secondary(mtm, "", WIDTH);
+    // Frees the activation slot, for moving Stickmouse to a new Mac.
+    let deactivate = ui::button(mtm, "Deactivate on This Mac", sel!(deactivateLicense:));
 
     let content = ui::centered_vstack(
         mtm,
-        &[&ui::app_icon(mtm, 72.0), &title, &detail, &buy, &ui::separator(mtm, WIDTH), &entry, &message],
+        &[
+            &ui::app_icon(mtm, 72.0),
+            &title,
+            &detail,
+            &buy,
+            &ui::separator(mtm, WIDTH),
+            &entry,
+            &deactivate,
+            &message,
+        ],
         12.0,
     );
     let window = ui::window(mtm, "Stickmouse License", &content);
-    Window { window, title, detail, buy, entry, key, message, refreshed: Instant::now() }
+    Window { window, title, detail, buy, deactivate, entry, key, message, refreshed: Instant::now() }
 }
 
 /// Called on the main thread every few milliseconds; updates while an activation runs.
@@ -130,5 +142,6 @@ fn refresh_window(window: &Window) {
     let licensed = status == Status::Licensed;
     window.buy.setHidden(licensed);
     window.entry.setHidden(licensed);
+    window.deactivate.setHidden(!licensed);
     window.message.setStringValue(&NSString::from_str(&license::message().unwrap_or_default()));
 }

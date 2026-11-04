@@ -15,7 +15,7 @@ use objc2_app_kit::{
 };
 use objc2_foundation::NSString;
 
-use super::{license, ui};
+use super::{license, ui, update};
 use crate::Message;
 
 pub struct Tray {
@@ -76,6 +76,8 @@ struct StatusBar {
     item: Retained<NSStatusItem>,
     seen: u64,
     license: Option<license::Status>,
+    /// The update the menu shows, so the menu is rebuilt when a background check finds one.
+    update: Option<update::Release>,
 }
 
 thread_local! {
@@ -92,14 +94,17 @@ pub fn refresh(mtm: MainThreadMarker) {
             item: NSStatusBar::systemStatusBar().statusItemWithLength(NSVariableStatusItemLength),
             seen: 0,
             license: None,
+            update: None,
         });
         let version = shared.version.load(Ordering::Relaxed);
         let status = license::status();
-        if version == bar.seen && bar.license == Some(status) {
+        let update = update::available();
+        if version == bar.seen && bar.license == Some(status) && bar.update == update {
             return;
         }
         bar.seen = version;
         bar.license = Some(status);
+        bar.update = update;
         let tray = shared.tray.lock().unwrap();
         redraw(mtm, bar, &tray);
     });
@@ -133,6 +138,13 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
             menu.addItem(&item(mtm, &format!("Trial: {days_left} days left"), None, ""));
         }
         license::Status::Expired => menu.addItem(&item(mtm, "Trial ended", None, "")),
+    }
+    if let Some(release) = &bar.update {
+        let update = item(mtm, &format!("Update Available: {}…", release.version), Some(sel!(openUpdate:)), "");
+        if !release.notes.is_empty() {
+            update.setToolTip(Some(&NSString::from_str(&release.notes)));
+        }
+        menu.addItem(&update);
     }
     menu.addItem(&NSMenuItem::separatorItem(mtm));
     let enabled = item(mtm, "Enabled", Some(sel!(toggle:)), "");

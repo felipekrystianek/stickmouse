@@ -123,6 +123,16 @@ define_class!(
             super::license_window::activate();
         }
 
+        #[unsafe(method(deactivateLicense:))]
+        fn deactivate_license(&self, _sender: Option<&AnyObject>) {
+            super::license::deactivate();
+        }
+
+        #[unsafe(method(openUpdate:))]
+        fn open_update(&self, _sender: Option<&AnyObject>) {
+            super::update::open_download();
+        }
+
         #[unsafe(method(finishSetup:))]
         fn finish_setup(&self, _sender: Option<&AnyObject>) {
             setup::finish();

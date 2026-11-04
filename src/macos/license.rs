@@ -179,8 +179,7 @@ pub fn revalidate_if_due() {
             Ok((404, _)) => {
                 eprintln!("padcursor: the license key is no longer valid");
                 with_stored(|stored| {
-                    stored.key = None;
-                    stored.activation_id = None;
+                    forget_key(stored);
                     save(stored);
                 });
                 set_message("Your license key is no longer valid.");
@@ -189,6 +188,45 @@ pub fn revalidate_if_due() {
             other => eprintln!("padcursor: could not check the license: {other:?}"),
         }
     });
+}
+
+/// Frees this Mac's activation in the background, so the key can be activated on another Mac.
+/// Watch `status()` and `message()` for the result.
+pub fn deactivate() {
+    let activation = with_stored(|stored| stored.key.clone().zip(stored.activation_id.clone()));
+    let Some((key, activation)) = activation else {
+        set_message("Stickmouse is not activated on this Mac.");
+        return;
+    };
+    set_message("Deactivating…");
+    thread::spawn(move || {
+        let body = serde_json::json!({
+            "key": key,
+            "organization_id": ORGANIZATION_ID,
+            "activation_id": activation,
+        });
+        match post("deactivate", &body) {
+            // 404: the activation is already gone (for example removed in the customer portal),
+            // which leaves this Mac in the state the user asked for.
+            Ok((204 | 404, _)) => {
+                with_stored(|stored| {
+                    forget_key(stored);
+                    save(stored);
+                });
+                set_message("Stickmouse is deactivated on this Mac. You can now activate it on another one.");
+            }
+            Ok((code, _)) => set_message(format!("The license server answered {code}. Try again later.")),
+            // Keep the license: forgetting it offline would leave the activation slot used up.
+            Err(error) => set_message(format!("Could not reach the license server: {error}")),
+        }
+    });
+}
+
+/// Drops the key but keeps `trial_started`, so deactivating never grants a fresh trial.
+fn forget_key(stored: &mut Stored) {
+    stored.key = None;
+    stored.activation_id = None;
+    stored.validated_at = None;
 }
 
 /// POSTs JSON with the system curl, which handles proxies and certificates like the rest of macOS.
@@ -209,10 +247,20 @@ fn post(endpoint: &str, body: &serde_json::Value) -> Result<(u16, serde_json::Va
     if !output.status.success() {
         return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
     }
-    let text = String::from_utf8_lossy(&output.stdout);
+    parse_response(&String::from_utf8_lossy(&output.stdout))
+}
+
+/// Splits curl's output into the JSON body and the status code that `-w` appends. Some answers,
+/// such as 204 after deactivating, have no body; that becomes `Null`.
+fn parse_response(text: &str) -> Result<(u16, serde_json::Value), String> {
     let (json, code) = text.rsplit_once('\n').ok_or("empty answer")?;
     let code = code.trim().parse().map_err(|_| "no status code")?;
-    Ok((code, serde_json::from_str(json).unwrap_or(serde_json::Value::Null)))
+    let body = if json.trim().is_empty() {
+        serde_json::Value::Null
+    } else {
+        serde_json::from_str(json).unwrap_or(serde_json::Value::Null)
+    };
+    Ok((code, body))
 }
 
 fn computer_name() -> String {
@@ -254,6 +302,28 @@ mod tests {
     fn a_key_without_activation_does_not_unlock() {
         let stored = Stored { key: Some("KEY".into()), ..trial(30) };
         assert_eq!(status_at(&stored, 100 * DAY), Status::Expired);
+    }
+
+    #[test]
+    fn forgetting_the_key_keeps_the_trial_start() {
+        let mut stored = Stored {
+            key: Some("KEY".into()),
+            activation_id: Some("id".into()),
+            validated_at: Some(5),
+            ..trial(30)
+        };
+        forget_key(&mut stored);
+        assert_eq!(stored, trial(30));
+        assert_eq!(status_at(&stored, 100 * DAY), Status::Expired);
+    }
+
+    #[test]
+    fn responses_parse_with_and_without_a_body() {
+        let (code, body) = parse_response("{\"id\":\"abc\"}\n200").unwrap();
+        assert_eq!((code, body["id"].as_str()), (200, Some("abc")));
+        assert_eq!(parse_response("\n204").unwrap(), (204, serde_json::Value::Null));
+        assert!(parse_response("204").is_err());
+        assert!(parse_response("{}\nxyz").is_err());
     }
 
     #[test]
