@@ -65,7 +65,7 @@ pub fn spawn(enabled: bool, messages: Sender<Message>) -> Option<Handle> {
     Some(Handle(shared))
 }
 
-/// Sends a message to the padcursor loop on the worker thread.
+/// Sends a message to the Stickmouse loop on the worker thread.
 pub fn send(message: Message) {
     if let Some(shared) = SHARED.get() {
         let _ = shared.messages.send(message);
@@ -123,7 +123,7 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
             button.setImage(Some(&image));
         }
         button.setToolTip(Some(&NSString::from_str(&format!(
-            "padcursor: {}\n{}",
+            "stickmouse: {}\n{}",
             tray.status(),
             tray.battery_text()
         ))));

@@ -142,7 +142,7 @@ define_class!(
     unsafe impl NSObjectProtocol for Actions {}
 
     unsafe impl NSApplicationDelegate for Actions {
-        /// Opening padcursor again while it runs (from Finder or Spotlight) shows the settings.
+        /// Opening Stickmouse again while it runs (from Finder or Spotlight) shows the settings.
         #[unsafe(method(applicationShouldHandleReopen:hasVisibleWindows:))]
         fn should_handle_reopen(&self, _app: &NSApplication, _visible: bool) -> bool {
             settings::show(self.mtm());
@@ -338,7 +338,7 @@ pub fn window(mtm: MainThreadMarker, title: &str, content: &NSStackView) -> Reta
     window
 }
 
-/// Brings `window` to the front. padcursor has no Dock icon, so the app must activate first.
+/// Brings `window` to the front. Stickmouse has no Dock icon, so the app must activate first.
 pub fn present(mtm: MainThreadMarker, window: &NSWindow) {
     NSApplication::sharedApplication(mtm).activate();
     window.makeKeyAndOrderFront(None);

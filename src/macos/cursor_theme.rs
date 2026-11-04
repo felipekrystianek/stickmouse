@@ -35,7 +35,7 @@ thread_local! {
 }
 
 // Private WindowServer calls. Without them macOS only lets the frontmost app hide the pointer,
-// and padcursor is never frontmost. WindowServer shows the pointer again if padcursor exits.
+// and Stickmouse is never frontmost. WindowServer shows the pointer again if Stickmouse exits.
 #[link(name = "CoreGraphics", kind = "framework")]
 unsafe extern "C" {
     fn _CGSDefaultConnection() -> i32;

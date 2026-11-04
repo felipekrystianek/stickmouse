@@ -4,3 +4,4 @@
 /packaging/*.pkg.tar.*
 /website/downloads
 .DS_Store
+.claude/

@@ -72,7 +72,7 @@ fn save(stored: &Stored) {
         .map_err(std::io::Error::other)
         .and_then(|text| fs::write(file(), text));
     if let Err(error) = written {
-        eprintln!("padcursor: could not save the license: {error}");
+        eprintln!("stickmouse: could not save the license: {error}");
     }
 }
 
@@ -177,7 +177,7 @@ pub fn revalidate_if_due() {
                 save(stored);
             }),
             Ok((404, _)) => {
-                eprintln!("padcursor: the license key is no longer valid");
+                eprintln!("stickmouse: the license key is no longer valid");
                 with_stored(|stored| {
                     forget_key(stored);
                     save(stored);
@@ -185,7 +185,7 @@ pub fn revalidate_if_due() {
                 set_message("Your license key is no longer valid.");
             }
             // Offline or a server problem: keep working and try again next launch.
-            other => eprintln!("padcursor: could not check the license: {other:?}"),
+            other => eprintln!("stickmouse: could not check the license: {other:?}"),
         }
     });
 }

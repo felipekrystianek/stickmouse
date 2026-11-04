@@ -63,7 +63,7 @@ fn apply_theme(theme: &str) -> bool {
     match result {
         Ok(status) if status.success() => true,
         other => {
-            eprintln!("padcursor: could not apply cursor theme {theme}: {other:?}");
+            eprintln!("stickmouse: could not apply cursor theme {theme}: {other:?}");
             false
         }
     }
@@ -78,7 +78,7 @@ fn show_circle() {
     }
     // Saved first, so a crash while the circle is showing can still be undone.
     if let Err(error) = fs::write(saved_theme_file(), &current) {
-        eprintln!("padcursor: not showing circle, could not save cursor theme: {error}");
+        eprintln!("stickmouse: not showing circle, could not save cursor theme: {error}");
         return;
     }
     apply_theme(THEME_NAME);
@@ -169,7 +169,7 @@ fn call_kwin(arguments: &[&str]) {
         .stdout(Stdio::null())
         .status();
     if let Err(error) = result {
-        eprintln!("padcursor: could not reach the on-screen keyboard: {error}");
+        eprintln!("stickmouse: could not reach the on-screen keyboard: {error}");
     }
 }
 
@@ -180,7 +180,7 @@ pub fn mission_control() {
         .stdout(Stdio::null())
         .spawn();
     if let Err(error) = result {
-        eprintln!("padcursor: could not open the overview: {error}");
+        eprintln!("stickmouse: could not open the overview: {error}");
     }
 }
 
@@ -192,7 +192,7 @@ pub fn notify(title: &str, body: &str) {
         Ok(mut child) => {
             thread::spawn(move || child.wait());
         }
-        Err(error) => eprintln!("padcursor: {title}: {body} ({error})"),
+        Err(error) => eprintln!("stickmouse: {title}: {body} ({error})"),
     }
 }
 
@@ -212,6 +212,6 @@ pub fn battery_level() -> io::Result<Option<String>> {
 /// Opens the settings file in the default text editor.
 pub fn open_settings() {
     if let Err(error) = Command::new("xdg-open").arg(config_file()).spawn() {
-        eprintln!("padcursor: could not open settings: {error}");
+        eprintln!("stickmouse: could not open settings: {error}");
     }
 }

@@ -66,7 +66,7 @@ fn save(stored: &Stored) {
         .and_then(|()| toml::to_string(stored).map_err(std::io::Error::other))
         .and_then(|text| fs::write(file(), text));
     if let Err(error) = written {
-        eprintln!("padcursor: could not save the update check: {error}");
+        eprintln!("stickmouse: could not save the update check: {error}");
     }
 }
 
@@ -106,7 +106,7 @@ pub fn check_if_due() {
             }
             // Offline, or the website is not live yet: stay quiet and try again later.
             Err(error) => {
-                eprintln!("padcursor: could not check for updates: {error}");
+                eprintln!("stickmouse: could not check for updates: {error}");
                 *FAILED_AT.lock().unwrap() = Some(Instant::now());
             }
         }

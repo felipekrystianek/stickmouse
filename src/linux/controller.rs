@@ -47,7 +47,7 @@ fn run(messages: Sender<Message>, commands: Receiver<Command>, mut grab: bool) {
             continue;
         };
         if let Err(error) = serve(device, &messages, &commands, &mut grab) {
-            eprintln!("padcursor: controller disconnected: {error}");
+            eprintln!("stickmouse: controller disconnected: {error}");
         }
         if messages.send(Message::Connected(false)).is_err()
             || messages.send(Message::Input(Input::Disconnected)).is_err()
@@ -86,7 +86,7 @@ fn serve(
         .get_absinfo()?
         .map(|(code, info)| (code.0, info))
         .collect();
-    eprintln!("padcursor: using controller {:?}", device.name().unwrap_or("unknown"));
+    eprintln!("stickmouse: using controller {:?}", device.name().unwrap_or("unknown"));
     let _ = messages.send(Message::Connected(true));
 
     loop {
@@ -103,7 +103,7 @@ fn serve(
                 Command::Grab(_) => {}
                 Command::Rumble => {
                     if let Err(error) = rumble(&mut device) {
-                        eprintln!("padcursor: rumble failed: {error}");
+                        eprintln!("stickmouse: rumble failed: {error}");
                     }
                 }
             }

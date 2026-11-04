@@ -60,7 +60,7 @@ pub fn toggle_keyboard() {
 /// Opens Mission Control; doing it again closes it.
 pub fn mission_control() {
     if let Err(error) = Command::new("open").arg(MISSION_CONTROL).spawn() {
-        eprintln!("padcursor: could not open Mission Control: {error}");
+        eprintln!("stickmouse: could not open Mission Control: {error}");
     }
 }
 
@@ -74,7 +74,7 @@ pub fn notify(title: &str, body: &str) {
         Ok(mut child) => {
             thread::spawn(move || child.wait());
         }
-        Err(error) => eprintln!("padcursor: {title}: {body} ({error})"),
+        Err(error) => eprintln!("stickmouse: {title}: {body} ({error})"),
     }
 }
 

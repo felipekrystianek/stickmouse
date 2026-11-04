@@ -119,7 +119,7 @@ pub fn poll(mtm: MainThreadMarker) {
             if let (Command::Rumble, Some(active)) = (command, poller.active.as_mut())
                 && let Err(error) = rumble(active)
             {
-                eprintln!("padcursor: rumble failed: {error}");
+                eprintln!("stickmouse: rumble failed: {error}");
             }
         }
 
@@ -165,7 +165,7 @@ fn rescan(poller: &mut Poller, messages: &Sender<Message>) {
         poller.active = None;
         *BATTERY.lock().unwrap() = None;
         *NAME.lock().unwrap() = None;
-        eprintln!("padcursor: controller disconnected");
+        eprintln!("stickmouse: controller disconnected");
         let _ = messages.send(Message::Connected(false));
         let _ = messages.send(Message::Input(Input::Disconnected));
     }
@@ -181,7 +181,7 @@ fn rescan(poller: &mut Poller, messages: &Sender<Message>) {
                 home.setPreferredSystemGestureState(GCSystemGestureState::Disabled);
             }
             let name = controller.vendorName().map_or("unknown".to_string(), |n| n.to_string());
-            eprintln!("padcursor: using controller {name:?}");
+            eprintln!("stickmouse: using controller {name:?}");
             *NAME.lock().unwrap() = Some(name);
         }
         poller.active = Some(Active { controller, state: State::default(), haptics: None, player: None });

@@ -113,7 +113,7 @@ pub fn spawn(enabled: bool, messages: Sender<Message>) -> Option<Handle> {
     match tray.spawn() {
         Ok(handle) => Some(handle),
         Err(error) => {
-            eprintln!("padcursor: no tray icon: {error}");
+            eprintln!("stickmouse: no tray icon: {error}");
             None
         }
     }

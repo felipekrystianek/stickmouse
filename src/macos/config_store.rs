@@ -38,7 +38,7 @@ pub fn update(change: impl FnOnce(&mut Config)) {
     });
     let path = desktop::config_file();
     if let Err(error) = fs::write(&path, config.to_toml()) {
-        eprintln!("padcursor: could not write {}: {error}", path.display());
+        eprintln!("stickmouse: could not write {}: {error}", path.display());
     }
     cursor_theme::set_scale(config.circle_scale);
     tray::send(Message::ConfigChanged(config));

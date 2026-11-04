@@ -1,4 +1,4 @@
-//! What padcursor needs from macOS: Accessibility access, and optionally a login item.
+//! What Stickmouse needs from macOS: Accessibility access, and optionally a login item.
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -23,7 +23,7 @@ unsafe extern "C" {
 
 static GRANTED_AT_LAUNCH: OnceLock<bool> = OnceLock::new();
 
-/// Whether padcursor may move the pointer and press keys. Reflects changes made while running.
+/// Whether Stickmouse may move the pointer and press keys. Reflects changes made while running.
 pub fn accessibility_granted() -> bool {
     // SAFETY: no arguments, no side effects.
     let granted = unsafe { AXIsProcessTrusted() } != 0;
@@ -31,13 +31,13 @@ pub fn accessibility_granted() -> bool {
     granted
 }
 
-/// Access granted after launch only takes effect once padcursor starts again.
+/// Access granted after launch only takes effect once Stickmouse starts again.
 pub fn needs_restart() -> bool {
     let granted = accessibility_granted();
     granted && GRANTED_AT_LAUNCH.get() == Some(&false)
 }
 
-/// Adds padcursor to the Accessibility list (switched off) and opens that list.
+/// Adds Stickmouse to the Accessibility list (switched off) and opens that list.
 pub fn open_accessibility_settings() {
     CGRequestPostEventAccess();
     open(ACCESSIBILITY_PANE);
@@ -49,7 +49,7 @@ pub fn open_bluetooth_settings() {
 
 pub fn open(target: &str) {
     if let Err(error) = Command::new("open").arg(target).spawn() {
-        eprintln!("padcursor: could not open {target}: {error}");
+        eprintln!("stickmouse: could not open {target}: {error}");
     }
 }
 
@@ -66,12 +66,12 @@ pub fn set_login_item_from(checkbox: &NSButton) {
         if enable { service.registerAndReturnError() } else { service.unregisterAndReturnError() }
     };
     if let Err(error) = result {
-        eprintln!("padcursor: could not change the login item: {}", error.localizedDescription());
+        eprintln!("stickmouse: could not change the login item: {}", error.localizedDescription());
         checkbox.setState(if login_item_enabled() { NSControlStateValueOn } else { 0 });
     }
 }
 
-/// Starts a new copy of padcursor and quits this one. The new copy waits for the old one to
+/// Starts a new copy of Stickmouse and quits this one. The new copy waits for the old one to
 /// release the single-instance lock.
 pub fn restart() {
     let target = bundle_path().unwrap_or_else(|| std::env::current_exe().unwrap_or_default());
@@ -80,7 +80,7 @@ pub fn restart() {
         .spawn();
     match spawned {
         Ok(_) => tray::send(Message::Quit),
-        Err(error) => eprintln!("padcursor: could not restart: {error}"),
+        Err(error) => eprintln!("stickmouse: could not restart: {error}"),
     }
 }
 

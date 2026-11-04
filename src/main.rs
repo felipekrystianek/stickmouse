@@ -55,7 +55,7 @@ fn start() -> ExitCode {
     match run() {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            eprintln!("padcursor: {error}");
+            eprintln!("stickmouse: {error}");
             desktop::notify("Stickmouse could not start", &error.to_string());
             ExitCode::FAILURE
         }
@@ -108,13 +108,13 @@ fn run() -> Result<(), Box<dyn Error>> {
                     *enabled = value;
                     send(&controller, ControllerCommand::Grab(value));
                     if let Err(error) = fs::write(&enabled_file, value.to_string()) {
-                        eprintln!("padcursor: could not save state: {error}");
+                        eprintln!("stickmouse: could not save state: {error}");
                     }
                     update_tray(&tray, |t| t.enabled = value);
                 }
                 other => {
                     if let Err(error) = output.apply(other) {
-                        eprintln!("padcursor: could not send input: {error}");
+                        eprintln!("stickmouse: could not send input: {error}");
                     }
                 }
             }
@@ -195,13 +195,13 @@ fn load_config() -> Config {
                 .map_or(Ok(()), fs::create_dir_all)
                 .and_then(|()| fs::write(&path, Config::default().to_toml()));
             if let Err(error) = written {
-                eprintln!("padcursor: could not write {}: {error}", path.display());
+                eprintln!("stickmouse: could not write {}: {error}", path.display());
             }
             return Config::default();
         }
     };
     Config::parse(&text).unwrap_or_else(|error| {
-        eprintln!("padcursor: {}: {error}", path.display());
+        eprintln!("stickmouse: {}: {error}", path.display());
         desktop::notify("Stickmouse settings have a mistake", "Using the default settings for now.");
         Config::default()
     })

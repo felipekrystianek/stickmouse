@@ -1,5 +1,5 @@
 //! The setup window: shown on first launch, and whenever Accessibility access is missing.
-//! It checks what padcursor needs live and links straight to the right System Settings pane.
+//! It checks what Stickmouse needs live and links straight to the right System Settings pane.
 
 use std::cell::RefCell;
 use std::fs;
@@ -43,12 +43,12 @@ fn done_file() -> PathBuf {
     desktop::state_dir().join("setup-done")
 }
 
-/// Shows the window on first launch or when padcursor cannot control the pointer.
+/// Shows the window on first launch or when Stickmouse cannot control the pointer.
 /// Returns whether the window was shown.
 pub fn show_if_needed(mtm: MainThreadMarker) -> bool {
     let granted = permissions::accessibility_granted();
     eprintln!(
-        "padcursor: Accessibility access {}",
+        "stickmouse: Accessibility access {}",
         if granted { "granted" } else { "missing, the pointer will not move" }
     );
     let needed = !granted || !done_file().exists();
@@ -68,7 +68,7 @@ pub fn show(mtm: MainThreadMarker) {
 
 pub fn finish() {
     if let Err(error) = fs::write(done_file(), "") {
-        eprintln!("padcursor: could not remember finished setup: {error}");
+        eprintln!("stickmouse: could not remember finished setup: {error}");
     }
     WINDOW.with_borrow(|slot| {
         if let Some(window) = slot {

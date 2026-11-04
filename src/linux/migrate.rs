@@ -20,9 +20,9 @@ pub fn old_settings() {
     for home in [desktop::config_home(), desktop::state_home()] {
         let (old, new) = (home.join(OLD_APP_DIR), home.join(APP_DIR));
         match copy_if_new(&old, &new) {
-            Ok(true) => eprintln!("padcursor: copied {} to {}", old.display(), new.display()),
+            Ok(true) => eprintln!("stickmouse: copied {} to {}", old.display(), new.display()),
             Ok(false) => {}
-            Err(error) => eprintln!("padcursor: could not copy {}: {error}", old.display()),
+            Err(error) => eprintln!("stickmouse: could not copy {}: {error}", old.display()),
         }
     }
 }
@@ -34,7 +34,7 @@ pub fn old_cursor_theme(icons_dir: &Path) {
         return;
     }
     if let Err(error) = remove_old_theme(icons_dir) {
-        eprintln!("padcursor: could not remove the old cursor theme: {error}");
+        eprintln!("stickmouse: could not remove the old cursor theme: {error}");
     }
 }
 

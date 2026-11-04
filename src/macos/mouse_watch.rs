@@ -61,14 +61,14 @@ fn run(messages: Sender<Message>) {
         match tap {
             Some(tap) => break tap,
             None => {
-                eprintln!("padcursor: cannot watch the real mouse yet, waiting for Accessibility access");
+                eprintln!("stickmouse: cannot watch the real mouse yet, waiting for Accessibility access");
                 thread::sleep(RETRY_INTERVAL);
             }
         }
     };
     watch.tap.set(&*tap);
     let Some(source) = CFMachPort::new_run_loop_source(None, Some(&tap), 0) else {
-        eprintln!("padcursor: cannot watch the real mouse");
+        eprintln!("stickmouse: cannot watch the real mouse");
         return;
     };
     let Some(run_loop) = CFRunLoop::current() else {
