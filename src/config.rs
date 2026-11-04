@@ -34,7 +34,7 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            pointer_speed: 1400.0,
+            pointer_speed: 800.0,
             precise_factor: 0.3,
             scroll_speed: 1800.0,
             stick_deadzone: 0.12,

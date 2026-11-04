@@ -699,7 +699,7 @@ mod tests {
         let actions = steer_right_for(&mut e, 125);
         assert!(actions.contains(&Action::Steering(true)));
         let (x, y) = total_motion(&actions);
-        assert!((1395..=1400).contains(&x), "moved {x}");
+        assert!((795..=800).contains(&x), "moved {x}");
         assert_eq!(y, 0);
     }
 

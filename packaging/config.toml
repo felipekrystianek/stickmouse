@@ -4,7 +4,7 @@
 #          (or change them in Settings, where changes apply right away)
 
 # Pointer speed at full stick deflection, in pixels per second.
-pointer_speed = 1400.0
+pointer_speed = 800.0
 # Speed multiplier for precise mode.
 precise_factor = 0.3
 # Scroll speed at full stick deflection. 120 units is one wheel notch.
