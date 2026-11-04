@@ -2,12 +2,14 @@
 
 use std::sync::mpsc::Sender;
 
-use ksni::blocking::{Handle, TrayMethods};
+use ksni::blocking::TrayMethods;
 use ksni::menu::{CheckmarkItem, StandardItem};
 use ksni::{MenuItem, ToolTip};
 
 use crate::Message;
 use crate::engine::Input;
+
+pub type Handle = ksni::blocking::Handle<Tray>;
 
 pub struct Tray {
     pub enabled: bool,
@@ -106,7 +108,7 @@ impl ksni::Tray for Tray {
 }
 
 /// Starts the tray. padcursor keeps working without one, so a failure here isn't fatal.
-pub fn spawn(enabled: bool, messages: Sender<Message>) -> Option<Handle<Tray>> {
+pub fn spawn(enabled: bool, messages: Sender<Message>) -> Option<Handle> {
     let tray = Tray { enabled, connected: false, battery: None, messages };
     match tray.spawn() {
         Ok(handle) => Some(handle),

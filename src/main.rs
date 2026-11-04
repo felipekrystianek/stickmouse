@@ -1,11 +1,19 @@
 mod config;
 mod engine;
+#[cfg(target_os = "linux")]
 mod linux;
+#[cfg(target_os = "macos")]
+mod macos;
+
+#[cfg(target_os = "linux")]
+use linux as platform;
+#[cfg(target_os = "macos")]
+use macos as platform;
 
 use std::error::Error;
 use std::fs::{self, File};
 use std::os::fd::AsRawFd;
-use std::process::{Command, ExitCode};
+use std::process::ExitCode;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{RecvTimeoutError, Sender, channel};
@@ -13,11 +21,11 @@ use std::time::{Duration, Instant};
 
 use config::Config;
 use engine::{Action, Engine, Input};
-use linux::controller::{self, Command as ControllerCommand};
-use linux::desktop::{self, CursorSwitcher};
-use linux::output::Output;
-use linux::tray::Tray;
-use linux::{cursor_theme, mouse_watch, tray};
+use platform::controller::{self, Command as ControllerCommand};
+use platform::desktop::{self, CursorSwitcher};
+use platform::output::Output;
+use platform::tray::Tray;
+use platform::{cursor_theme, mouse_watch, tray};
 
 const TICK: Duration = Duration::from_millis(8);
 const IDLE_WAIT: Duration = Duration::from_millis(250);
@@ -36,6 +44,10 @@ fn main() -> ExitCode {
         desktop::restore_cursor();
         return ExitCode::SUCCESS;
     }
+    platform::run_app(start)
+}
+
+fn start() -> ExitCode {
     match run() {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
@@ -156,7 +168,7 @@ fn send(controller: &Sender<ControllerCommand>, command: ControllerCommand) {
     let _ = controller.send(command);
 }
 
-fn update_tray(tray: &Option<ksni::blocking::Handle<Tray>>, mut change: impl FnMut(&mut Tray)) {
+fn update_tray(tray: &Option<tray::Handle>, mut change: impl FnMut(&mut Tray)) {
     if let Some(handle) = tray {
         handle.update(|t| change(t));
     }
@@ -185,7 +197,7 @@ fn load_config() -> Config {
 }
 
 fn open_settings() {
-    if let Err(error) = Command::new("xdg-open").arg(desktop::config_file()).spawn() {
+    if let Err(error) = desktop::open_file(&desktop::config_file()) {
         eprintln!("padcursor: could not open settings: {error}");
     }
 }

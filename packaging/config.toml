@@ -1,5 +1,6 @@
 # padcursor settings. Restart padcursor after changing them:
-#   systemctl --user restart padcursor
+#   Linux: systemctl --user restart padcursor
+#   macOS: choose Quit in the menu bar icon, then open padcursor again
 
 # Pointer speed at full stick deflection, in pixels per second.
 pointer_speed = 1400.0

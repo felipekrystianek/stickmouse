@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>padcursor</string>
+    <key>CFBundleDisplayName</key>
+    <string>padcursor</string>
+    <key>CFBundleIdentifier</key>
+    <string>io.github.felipekrystianek.padcursor</string>
+    <key>CFBundleExecutable</key>
+    <string>padcursor</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleVersion</key>
+    <string>VERSION</string>
+    <key>CFBundleShortVersionString</key>
+    <string>VERSION</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>11.3</string>
+    <!-- Menu bar only: no Dock icon and no app menu. -->
+    <key>LSUIElement</key>
+    <true/>
+</dict>
+</plist>

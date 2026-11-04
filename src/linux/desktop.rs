@@ -2,7 +2,7 @@
 
 use std::fs;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::mpsc::{Sender, channel};
 use std::thread::{self, JoinHandle};
@@ -184,4 +184,8 @@ pub fn battery_level() -> io::Result<Option<String>> {
         }
     }
     Ok(None)
+}
+
+pub fn open_file(path: &Path) -> io::Result<()> {
+    Command::new("xdg-open").arg(path).spawn().map(|_| ())
 }
