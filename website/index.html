@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stickmouse – your game controller as a Mac mouse</title>
 <meta name="description" content="Stickmouse turns your Xbox or PlayStation controller into a mouse and media remote for your Mac. Free 7-day trial, then $5 once.">
+<link rel="canonical" href="https://stickmouse.app/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111114" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://stickmouse.app/">
+<meta property="og:site_name" content="Stickmouse">
+<meta property="og:title" content="Stickmouse – your game controller as a Mac mouse">
+<meta property="og:description" content="Turn your Xbox or PlayStation controller into a mouse and media remote for your Mac. Free 7-day trial, then $5 once.">
+<meta property="og:image" content="https://stickmouse.app/icon.png">
+<meta property="og:image:alt" content="Stickmouse icon">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="icon.png">
 <style>
   :root {
@@ -61,6 +72,7 @@
   details { background: var(--surface); border-radius: 14px; padding: 16px 20px; margin-bottom: 10px; }
   summary { font-weight: 600; cursor: pointer; }
   details p { color: var(--muted); margin: 10px 0 0; }
+  details a { color: var(--accent); }
   footer { color: var(--muted); font-size: 13px; text-align: center; padding: 32px 0 48px; border-top: 1px solid var(--border); }
   footer a { color: inherit; }
 </style>
@@ -116,9 +128,11 @@
     <ul>
       <li>One payment, no subscription</li>
       <li>Free 7-day trial with every feature</li>
+      <li>One license works on up to 3 of your Macs</li>
       <li>Taxes handled at checkout</li>
+      <li>14-day refund, no questions asked</li>
     </ul>
-    <!-- Replace with the Polar checkout link for the Stickmouse product. -->
+    <!-- TODO(owner): replace REPLACE_WITH_CHECKOUT_LINK with the Polar checkout link for the Stickmouse product. -->
     <a class="button primary" href="https://buy.polar.sh/REPLACE_WITH_CHECKOUT_LINK">Buy Stickmouse</a>
     <p class="note">Your license key arrives by email. Paste it in Stickmouse, menu bar icon › Buy Stickmouse.</p>
   </section>
@@ -131,7 +145,7 @@
     </details>
     <details>
       <summary>Why does Stickmouse need Accessibility access?</summary>
-      <p>macOS only lets apps with Accessibility access move the pointer, click and press keys. Stickmouse uses it for nothing else, and it never connects to the internet except to check your license key.</p>
+      <p>macOS only lets apps with Accessibility access move the pointer, click and press keys. Stickmouse uses it for nothing else. It only goes online to check your license key and to look for updates; see the <a href="privacy.html">privacy policy</a>.</p>
     </details>
     <details>
       <summary>Which controllers work?</summary>
@@ -145,10 +159,24 @@
       <summary>Can I use my license on more than one Mac?</summary>
       <p>Yes, one license works on up to 3 of your Macs.</p>
     </details>
+    <details>
+      <summary>How do I move my license to a new Mac?</summary>
+      <p>On the old Mac, open the Stickmouse menu › License… and click Deactivate on This Mac. Then enter the same key on the new Mac. If the old Mac is gone, <a href="https://github.com/felipekrystianek/stickmouse-support">open an issue</a> and I will free up the slot.</p>
+    </details>
+    <details>
+      <summary>Can I change what the buttons do?</summary>
+      <p>Yes, every button is customizable. Give any button, trigger or D-pad direction one action for a press and another for holding it: a click, a media key, Mission Control or any keyboard shortcut. You can also swap the left and right sticks. Open Customize Buttons from the menu bar icon.</p>
+    </details>
+    <details>
+      <summary>What if Stickmouse is not for me?</summary>
+      <p>You get a full refund within 14 days of purchase, no questions asked. Reply to the receipt email from Polar, or <a href="https://github.com/felipekrystianek/stickmouse-support">open an issue</a> on the support page, and include your order email.</p>
+    </details>
   </section>
 
   <footer>
     © 2026 Krystian Filipek ·
+    <a href="https://github.com/felipekrystianek/stickmouse-support">Support</a> ·
+    <a href="privacy.html">Privacy</a> ·
     <a href="THIRD_PARTY_LICENSES.html">Open-source licenses</a><br>
     Xbox is a trademark of Microsoft Corporation. PlayStation and DualSense are trademarks of Sony Interactive Entertainment.
     Stickmouse is not affiliated with or endorsed by Microsoft or Sony.

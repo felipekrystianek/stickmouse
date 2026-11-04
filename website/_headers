@@ -1,0 +1,15 @@
+# Cloudflare Pages response headers. https://developers.cloudflare.com/pages/configuration/headers/
+# The pages use inline <style> blocks and no scripts, so only same-origin
+# resources plus inline styles are allowed. Links to buy.polar.sh and GitHub
+# are plain navigations and need no CSP entry.
+/*
+  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000
+
+# The app polls this file daily for updates; keep it fresh.
+/version.json
+  Cache-Control: no-cache

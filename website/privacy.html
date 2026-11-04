@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stickmouse – Privacy policy</title>
+<meta name="description" content="How Stickmouse and stickmouse.app handle your data: no analytics, no tracking.">
+<link rel="canonical" href="https://stickmouse.app/privacy.html">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111114" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/icon.png">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f5f5f7;
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --accent: #3a6df0;
+    --accent-text: #ffffff;
+    --border: #d2d2d7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111114;
+      --surface: #1c1c21;
+      --text: #f5f5f7;
+      --muted: #a1a1a6;
+      --accent: #5b8cff;
+      --border: #2e2e35;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 16px; }
+  header { text-align: center; padding: 72px 0 48px; }
+  header img { width: 128px; height: 128px; }
+  h1 { font-size: clamp(36px, 7vw, 56px); letter-spacing: -0.02em; margin: 16px 0 8px; }
+  .tagline { font-size: clamp(19px, 3vw, 24px); color: var(--muted); margin: 0 auto 32px; max-width: 640px; }
+  .buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .button {
+    display: inline-block; padding: 13px 26px; border-radius: 980px; font-weight: 600;
+    text-decoration: none; border: 1px solid var(--accent);
+  }
+  .primary { background: var(--accent); color: var(--accent-text); }
+  .secondary { color: var(--accent); }
+  .note { color: var(--muted); font-size: 14px; margin-top: 14px; }
+  section { padding: 48px 0; border-top: 1px solid var(--border); }
+  h2 { font-size: 32px; letter-spacing: -0.01em; margin: 0 0 24px; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card { background: var(--surface); border-radius: 18px; padding: 22px; }
+  .card h3 { margin: 0 0 6px; font-size: 19px; }
+  .card p { margin: 0; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td:first-child { font-weight: 600; white-space: nowrap; width: 38%; }
+  .price { text-align: center; }
+  .price .amount { font-size: 64px; font-weight: 700; letter-spacing: -0.03em; }
+  .price ul { list-style: none; padding: 0; color: var(--muted); margin: 8px 0 28px; }
+  details { background: var(--surface); border-radius: 14px; padding: 16px 20px; margin-bottom: 10px; }
+  summary { font-weight: 600; cursor: pointer; }
+  details p { color: var(--muted); margin: 10px 0 0; }
+  details a { color: var(--accent); }
+  footer { color: var(--muted); font-size: 13px; text-align: center; padding: 32px 0 48px; border-top: 1px solid var(--border); }
+  footer a { color: inherit; }
+  main { max-width: 680px; margin: 0 auto; padding: 56px 0 48px; }
+  main h1 { font-size: clamp(32px, 6vw, 44px); }
+  main h2 { text-align: left; font-size: 22px; margin: 32px 0 8px; }
+  main p { color: var(--muted); }
+  main a { color: var(--accent); }
+  main.center { text-align: center; }
+  code { font-size: 15px; overflow-wrap: anywhere; }
+  .home { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 600; }
+  .home img { width: 32px; height: 32px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <main>
+    <a class="home" href="/"><img src="/icon.png" alt="">Stickmouse</a>
+    <h1>Privacy policy</h1>
+    <p>Last updated: November 4, 2026</p>
+    <p>Stickmouse is a Mac app that runs entirely on your computer. It collects no analytics, no telemetry and no personal data. This page lists every time it connects to the internet.</p>
+
+    <h2>License checks</h2>
+    <p>When you activate, validate or deactivate a license, Stickmouse sends your license key and your Mac's computer name to the license API of Polar, the store that sells Stickmouse. The computer name lets you tell your Macs apart when you manage activations. Validation happens about once a week. Nothing else is sent.</p>
+
+    <h2>Update checks</h2>
+    <p>Once a day, Stickmouse downloads <code>https://stickmouse.app/version.json</code> to see whether a newer version is available. The request contains no license key, computer name or other identifier.</p>
+
+    <h2>Everything else</h2>
+    <p>Your controller input, button settings and preferences stay on your Mac. Stickmouse uses Accessibility access only to move the pointer, click and press keys.</p>
+
+    <h2>This website</h2>
+    <p>stickmouse.app uses no cookies, no analytics and no trackers. It is hosted on Cloudflare Pages, which processes standard request data such as IP addresses to deliver and protect the site.</p>
+
+    <h2>Payments</h2>
+    <p>Purchases are handled by <a href="https://polar.sh">Polar</a>, the merchant of record, which processes your name, email address and payment details. See <a href="https://polar.sh/legal/privacy">Polar's privacy policy</a>. I receive your email address and order details from Polar to deliver your license key and help with support and refunds.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about privacy? <a href="https://github.com/felipekrystianek/stickmouse-support">Open an issue on the support page</a> or reply to your Polar receipt email.</p>
+  </main>
+
+  <footer>
+    © 2026 Krystian Filipek ·
+    <a href="/">Home</a> ·
+    <a href="https://github.com/felipekrystianek/stickmouse-support">Support</a> ·
+    <a href="/privacy.html">Privacy</a> ·
+    <a href="/THIRD_PARTY_LICENSES.html">Open-source licenses</a>
+  </footer>
+</div>
+</body>
+</html>
