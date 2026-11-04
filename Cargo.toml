@@ -1,0 +1,18 @@
+[package]
+name = "padcursor"
+version = "0.1.0"
+edition = "2024"
+description = "Use an Xbox controller as a mouse and media remote on KDE Plasma"
+license = "MIT"
+
+[dependencies]
+evdev = "0.13"
+ksni = { version = "0.3", features = ["blocking"] }
+libc = "0.2"
+serde = { version = "1", features = ["derive"] }
+signal-hook = "0.4"
+toml = "1"
+
+[profile.release]
+lto = "thin"
+strip = true

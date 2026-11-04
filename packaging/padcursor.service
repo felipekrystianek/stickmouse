@@ -1,0 +1,13 @@
+[Unit]
+Description=Use an Xbox controller as a mouse and media remote
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/padcursor
+ExecStopPost=/usr/bin/padcursor --restore-cursor
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=graphical-session.target

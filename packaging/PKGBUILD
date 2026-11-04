@@ -1,0 +1,30 @@
+# Builds from this checkout: run `makepkg -si` in the packaging directory.
+pkgname=padcursor
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Use an Xbox controller as a mouse and media remote on KDE Plasma"
+arch=('x86_64')
+license=('MIT')
+depends=('gcc-libs' 'glibc' 'kconfig' 'libnotify' 'plasma-keyboard' 'plasma-workspace' 'qt6-tools' 'xdg-utils')
+optdepends=('xpadneo-dkms: Bluetooth support, including holding the Xbox button')
+makedepends=('rust')
+install=padcursor.install
+options=('!debug')
+
+build() {
+    cargo build --release --locked \
+        --manifest-path "$startdir/../Cargo.toml" \
+        --target-dir "$srcdir/target"
+}
+
+check() {
+    cargo test --release --locked \
+        --manifest-path "$startdir/../Cargo.toml" \
+        --target-dir "$srcdir/target"
+}
+
+package() {
+    install -Dm755 "$srcdir/target/release/padcursor" "$pkgdir/usr/bin/padcursor"
+    install -Dm644 "$startdir/padcursor.service" "$pkgdir/usr/lib/systemd/user/padcursor.service"
+    install -Dm644 "$startdir/padcursor-modprobe.conf" "$pkgdir/usr/lib/modprobe.d/padcursor.conf"
+}

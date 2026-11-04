@@ -1,0 +1,27 @@
+# padcursor settings. Restart padcursor after changing them:
+#   systemctl --user restart padcursor
+
+# Pointer speed at full stick deflection, in pixels per second.
+pointer_speed = 1400.0
+# Speed multiplier for precise mode (left stick click).
+precise_factor = 0.3
+# Scroll speed at full stick deflection. 120 units is one wheel notch.
+scroll_speed = 1800.0
+# How far a stick must move before it counts, from 0.0 to 1.0.
+stick_deadzone = 0.12
+# Higher values give finer control near the centre of the stick.
+stick_curve = 2.0
+# Size of the steering circle compared to a normal cursor.
+circle_scale = 1.5
+
+# How long to hold B before it sends Esc instead of a right click.
+b_hold_ms = 400
+# How long to hold the Xbox button to turn padcursor on or off.
+xbox_hold_ms = 1000
+# How long after the last View press the selected window is committed.
+alt_tab_commit_ms = 800
+# How long after the stick stops the circle goes back to the normal cursor.
+steering_idle_ms = 1000
+# Volume repeat while a trigger is held: delay before repeating, then the repeat interval.
+volume_delay_ms = 400
+volume_repeat_ms = 150
