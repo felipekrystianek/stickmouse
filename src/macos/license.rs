@@ -14,9 +14,9 @@ use serde::{Deserialize, Serialize};
 use super::desktop;
 
 /// From the Polar dashboard: Settings, General, Organization ID.
-const ORGANIZATION_ID: &str = "00000000-0000-0000-0000-000000000000";
+const ORGANIZATION_ID: &str = "4b4ecb33-daab-4e43-b968-a2f94190d8e7";
 /// Where the "Buy" button goes: the Stickmouse website, or a Polar checkout link.
-pub const BUY_URL: &str = "https://stickmouse.app/#buy";
+pub const BUY_URL: &str = "https://buy.polar.sh/polar_cl_Z7wMa7FaNDxNY8MoMiqM6UTXGiVWJQPU1vT2J0MzuH6";
 pub const PRICE: &str = "$5";
 const API: &str = "https://api.polar.sh/v1/customer-portal/license-keys";
 const TRIAL_DAYS: u64 = 7;
