@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{desktop, permissions};
 
-const VERSION_URL: &str = "https://stickmouse.app/version.json";
+const VERSION_URL: &str = "https://stickmouse.pages.dev/version.json";
 const CHECK_EVERY: u64 = 24 * 60 * 60;
 /// After a failed check (offline), try again this much later instead of waiting a whole day.
 const RETRY_AFTER: Duration = Duration::from_secs(60 * 60);
@@ -191,7 +191,7 @@ mod tests {
     #[test]
     fn version_json_parses_and_rejects_unsafe_links() {
         let release = parse_release(
-            r#"{"version": "0.2.0", "url": "https://stickmouse.app/downloads/Stickmouse.dmg", "notes": "Fixes"}"#,
+            r#"{"version": "0.2.0", "url": "https://stickmouse.pages.dev/downloads/Stickmouse.dmg", "notes": "Fixes"}"#,
         )
         .unwrap();
         assert_eq!(release.version, "0.2.0");

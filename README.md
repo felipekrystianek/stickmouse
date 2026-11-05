@@ -73,7 +73,7 @@ the default buttons follow the Xbox layout.
 
 ### Install
 
-1. Download Stickmouse from [stickmouse.app](https://stickmouse.app) and drag it to Applications.
+1. Download Stickmouse from [stickmouse.pages.dev](https://stickmouse.pages.dev) and drag it to Applications.
 2. Open it. Stickmouse is not notarized, so macOS may say it "cannot be opened" or "could not be
    verified". Open System Settings > Privacy & Security, scroll down, click Open Anyway next to
    Stickmouse and confirm. This is needed only once.
@@ -85,7 +85,7 @@ Stickmouse lives in the menu bar, with no Dock icon.
 ### Pricing
 
 Every feature is free for 7 days. After that, a license costs $5, paid once through Polar.sh.
-Buy it from the menu bar icon > Buy Stickmouse or on [stickmouse.app](https://stickmouse.app); the
+Buy it from the menu bar icon > Buy Stickmouse or on [stickmouse.pages.dev](https://stickmouse.pages.dev); the
 license key arrives by email and is pasted into the same window.
 
 ### Build from source
