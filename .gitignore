@@ -5,3 +5,4 @@
 /website/downloads
 .DS_Store
 .claude/
+/.wrangler/

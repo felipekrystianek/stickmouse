@@ -258,18 +258,26 @@ fn build(mtm: MainThreadMarker) -> Window {
         ui::hstack(mtm, &[&access_icon, &access_text, &access_button], 8.0).into_super(),
     );
 
+    // Two rows: the four buttons side by side are wider than the window.
     let footer = ui::hstack(
         mtm,
         &[
-            &ui::button(mtm, "Restore Defaults", sel!(restoreDefaults:)),
             &ui::button(mtm, "Customize Buttons…", sel!(openButtons:)),
-            &ui::button(mtm, "Open Config File", sel!(openConfigFile:)),
             &ui::button(mtm, "Setup & Permissions…", sel!(openSetup:)),
+        ],
+        8.0,
+    );
+    let footer_secondary = ui::hstack(
+        mtm,
+        &[
+            &ui::button(mtm, "Open Config File", sel!(openConfigFile:)),
+            &ui::button(mtm, "Restore Defaults", sel!(restoreDefaults:)),
         ],
         8.0,
     );
     rows.push(ui::separator(mtm, CONTENT_WIDTH).into_super());
     rows.push(footer.into_super());
+    rows.push(footer_secondary.into_super());
     rows.push(
         ui::secondary(
             mtm,

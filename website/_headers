@@ -1,5 +1,5 @@
 # Cloudflare Pages response headers. https://developers.cloudflare.com/pages/configuration/headers/
-# The pages use inline <style> blocks and no scripts, so only same-origin
+# The pages use /style.css, inline SVG and no scripts, so only same-origin
 # resources plus inline styles are allowed. Links to buy.polar.sh and GitHub
 # are plain navigations and need no CSP entry.
 /*
@@ -13,3 +13,9 @@
 # The app polls this file daily for updates; keep it fresh.
 /version.json
   Cache-Control: no-cache
+
+# Keep the pages.dev preview out of search results; stickmouse.app is the real address.
+https://stickmouse.pages.dev/*
+  X-Robots-Tag: noindex
+https://:sub.stickmouse.pages.dev/*
+  X-Robots-Tag: noindex

@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 576" role="img" aria-label="Pad steruje kursorem na Macu: lewa gałka go przesuwa, A klika, prawa gałka przewija">
+<style>
+  .loop { animation-duration: 10s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+  #pointer { animation-name: pointer; }
+  @keyframes pointer {
+    0%, 8% { transform: translate(170px, 330px); }
+    28%, 74% { transform: translate(452px, 196px); }
+    92%, 100% { transform: translate(170px, 330px); }
+  }
+  #lstick { animation-name: lstick; animation-timing-function: linear; }
+  @keyframes lstick {
+    0%, 8% { transform: translate(0, 0); }
+    10%, 26% { transform: translate(7px, -5px); }
+    28%, 74% { transform: translate(0, 0); }
+    76%, 90% { transform: translate(-7px, 5px); }
+    92%, 100% { transform: translate(0, 0); }
+  }
+  #rstick { animation-name: rstick; animation-timing-function: linear; }
+  @keyframes rstick {
+    0%, 42% { transform: translate(0, 0); }
+    44%, 54% { transform: translate(0, 7px); }
+    56%, 60% { transform: translate(0, 0); }
+    62%, 70% { transform: translate(0, -7px); }
+    72%, 100% { transform: translate(0, 0); }
+  }
+  #abtn { animation-name: abtn; animation-timing-function: linear; }
+  @keyframes abtn {
+    0%, 31% { fill: #3f9d4b; }
+    32%, 35% { fill: #8be08f; }
+    36%, 100% { fill: #3f9d4b; }
+  }
+  #ripple { animation-name: ripple; animation-timing-function: ease-out; }
+  @keyframes ripple {
+    0%, 32% { transform: scale(0.2); opacity: 0; }
+    33% { transform: scale(0.3); opacity: 0.9; }
+    40%, 100% { transform: scale(1.6); opacity: 0; }
+  }
+  #selected { animation-name: selected; animation-timing-function: linear; }
+  @keyframes selected {
+    0%, 32% { opacity: 0; }
+    33%, 88% { opacity: 1; }
+    92%, 100% { opacity: 0; }
+  }
+  #feed { animation-name: feed; }
+  @keyframes feed {
+    0%, 43% { transform: translateY(0); }
+    55%, 61% { transform: translateY(-96px); }
+    71%, 100% { transform: translateY(0); }
+  }
+  .cap { animation-timing-function: linear; opacity: 0; }
+  #cap1 { animation-name: cap1; }
+  #cap2 { animation-name: cap2; }
+  #cap3 { animation-name: cap3; }
+  @keyframes cap1 { 0%, 7% { opacity: 0; } 9%, 27% { opacity: 1; } 29%, 74% { opacity: 0; } 76%, 90% { opacity: 1; } 92%, 100% { opacity: 0; } }
+  @keyframes cap2 { 0%, 29% { opacity: 0; } 31%, 39% { opacity: 1; } 41%, 100% { opacity: 0; } }
+  @keyframes cap3 { 0%, 41% { opacity: 0; } 43%, 70% { opacity: 1; } 72%, 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .loop { animation: none; }
+    #pointer { transform: translate(452px, 196px); }
+    #cap1 { opacity: 1; }
+  }
+  text { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+</style>
+<defs>
+  <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#3a3f9e"/>
+    <stop offset="0.55" stop-color="#7b4fb8"/>
+    <stop offset="1" stop-color="#e0748a"/>
+  </linearGradient>
+  <linearGradient id="pad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#3a3d45"/>
+    <stop offset="1" stop-color="#1e2026"/>
+  </linearGradient>
+  <linearGradient id="thumbA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9f6b"/><stop offset="1" stop-color="#e8506b"/></linearGradient>
+  <linearGradient id="thumbB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fd0c4"/><stop offset="1" stop-color="#3a7bd5"/></linearGradient>
+  <linearGradient id="thumbC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd86b"/><stop offset="1" stop-color="#f08a3c"/></linearGradient>
+  <linearGradient id="thumbD" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a98bff"/><stop offset="1" stop-color="#5b5bd6"/></linearGradient>
+  <clipPath id="screen"><rect x="34" y="24" width="652" height="372" rx="6"/></clipPath>
+  <clipPath id="content"><rect x="92" y="104" width="536" height="250"/></clipPath>
+  <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+    <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity="0.35"/>
+  </filter>
+</defs>
+
+<!-- Display -->
+<rect x="20" y="10" width="680" height="400" rx="18" fill="#0d0e11"/>
+<g clip-path="url(#screen)">
+  <rect x="34" y="24" width="652" height="372" fill="url(#wall)"/>
+  <rect x="34" y="24" width="652" height="20" fill="#000" opacity="0.25"/>
+  <circle cx="50" cy="34" r="4" fill="#fff" opacity="0.85"/>
+  <rect x="64" y="30" width="40" height="8" rx="4" fill="#fff" opacity="0.7"/>
+  <rect x="112" y="30" width="28" height="8" rx="4" fill="#fff" opacity="0.45"/>
+  <rect x="148" y="30" width="28" height="8" rx="4" fill="#fff" opacity="0.45"/>
+  <rect x="610" y="30" width="60" height="8" rx="4" fill="#fff" opacity="0.6"/>
+
+  <!-- Window -->
+  <g filter="url(#shadow)">
+    <rect x="80" y="64" width="560" height="300" rx="12" fill="#1f2026"/>
+  </g>
+  <circle cx="98" cy="82" r="5" fill="#ff5f57"/>
+  <circle cx="114" cy="82" r="5" fill="#febc2e"/>
+  <circle cx="130" cy="82" r="5" fill="#28c840"/>
+  <rect x="250" y="74" width="220" height="16" rx="8" fill="#2d2f37"/>
+  <g clip-path="url(#content)">
+    <g id="feed" class="loop">
+      <g>
+        <rect x="104" y="112" width="160" height="90" rx="8" fill="url(#thumbA)"/>
+        <rect x="104" y="208" width="120" height="8" rx="4" fill="#4a4d57"/>
+        <rect x="104" y="222" width="80" height="6" rx="3" fill="#363841"/>
+        <rect x="280" y="112" width="160" height="90" rx="8" fill="url(#thumbB)"/>
+        <rect x="280" y="208" width="130" height="8" rx="4" fill="#4a4d57"/>
+        <rect x="280" y="222" width="70" height="6" rx="3" fill="#363841"/>
+        <rect x="456" y="112" width="160" height="90" rx="8" fill="url(#thumbC)"/>
+        <rect x="456" y="208" width="110" height="8" rx="4" fill="#4a4d57"/>
+        <rect x="456" y="222" width="90" height="6" rx="3" fill="#363841"/>
+        <rect x="104" y="244" width="160" height="90" rx="8" fill="url(#thumbD)"/>
+        <rect x="104" y="340" width="120" height="8" rx="4" fill="#4a4d57"/>
+        <rect x="280" y="244" width="160" height="90" rx="8" fill="url(#thumbA)" opacity="0.8"/>
+        <rect x="280" y="340" width="100" height="8" rx="4" fill="#4a4d57"/>
+        <rect x="456" y="244" width="160" height="90" rx="8" fill="url(#thumbB)" opacity="0.8"/>
+        <rect x="456" y="340" width="130" height="8" rx="4" fill="#4a4d57"/>
+        <rect x="104" y="376" width="160" height="90" rx="8" fill="url(#thumbC)" opacity="0.7"/>
+        <rect x="280" y="376" width="160" height="90" rx="8" fill="url(#thumbD)" opacity="0.7"/>
+        <rect x="456" y="376" width="160" height="90" rx="8" fill="url(#thumbA)" opacity="0.7"/>
+        <rect id="selected" class="loop" x="454" y="110" width="164" height="94" rx="10" fill="none" stroke="#fff" stroke-width="3"/>
+        <path d="M528 145 l22 12 -22 12z" fill="#fff" opacity="0.9"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Steering circle -->
+  <g id="pointer" class="loop">
+    <circle id="ripple" class="loop" r="18" fill="none" stroke="#fff" stroke-width="3"/>
+    <circle r="13" fill="#fff" fill-opacity="0.18" stroke="#fff" stroke-width="2.5"/>
+    <circle r="3.5" fill="#fff"/>
+  </g>
+</g>
+<rect x="320" y="410" width="80" height="14" fill="#16171b"/>
+<rect x="270" y="424" width="180" height="6" rx="3" fill="#16171b"/>
+
+<!-- Captions -->
+<g transform="translate(360 52)" text-anchor="middle" font-size="15" font-weight="600" fill="#fff">
+  <g id="cap1" class="cap loop"><rect x="-130" y="-2" width="260" height="28" rx="14" fill="#000" opacity="0.55"/><text y="17">Lewa gałka rusza kursorem</text></g>
+  <g id="cap2" class="cap loop"><rect x="-70" y="-2" width="140" height="28" rx="14" fill="#000" opacity="0.55"/><text y="17">A klika</text></g>
+  <g id="cap3" class="cap loop"><rect x="-120" y="-2" width="240" height="28" rx="14" fill="#000" opacity="0.55"/><text y="17">Prawa gałka przewija</text></g>
+</g>
+
+<!-- Controller -->
+<g transform="translate(360 470)">
+  <path d="M-92 -58 C-60 -70 60 -70 92 -58 C130 -44 150 10 158 50 C164 82 140 96 118 82 C100 70 86 46 64 40 L-64 40 C-86 46 -100 70 -118 82 C-140 96 -164 82 -158 50 C-150 10 -130 -44 -92 -58 Z" fill="url(#pad)" stroke="#4a4e58" stroke-width="1.5"/>
+  <circle cx="0" cy="-34" r="11" fill="#2b2e35" stroke="#5a5e68" stroke-width="1.5"/>
+  <circle cx="0" cy="-34" r="5" fill="#c9ccd3"/>
+  <!-- Left stick -->
+  <circle cx="-82" cy="-18" r="24" fill="#15161a"/>
+  <g transform="translate(-82 -18)"><g id="lstick" class="loop"><circle r="17" fill="#3c3f47" stroke="#5f636d" stroke-width="2"/><circle r="9" fill="#2c2e34"/></g></g>
+  <!-- Right stick -->
+  <circle cx="44" cy="22" r="22" fill="#15161a"/>
+  <g transform="translate(44 22)"><g id="rstick" class="loop"><circle r="15" fill="#3c3f47" stroke="#5f636d" stroke-width="2"/><circle r="8" fill="#2c2e34"/></g></g>
+  <!-- D-pad -->
+  <g transform="translate(-44 22)" fill="#2c2e34" stroke="#555963" stroke-width="1">
+    <rect x="-7" y="-20" width="14" height="40" rx="3"/>
+    <rect x="-20" y="-7" width="40" height="14" rx="3"/>
+  </g>
+  <!-- Face buttons -->
+  <g transform="translate(92 -18)" font-size="10" font-weight="700" text-anchor="middle">
+    <circle cx="0" cy="-17" r="9" fill="#c9a227"/><text y="-13.5" fill="#1d1d1f">Y</text>
+    <circle cx="-17" cy="0" r="9" fill="#2f6fd0"/><text x="-17" y="3.5" fill="#fff">X</text>
+    <circle cx="17" cy="0" r="9" fill="#c7413c"/><text x="17" y="3.5" fill="#fff">B</text>
+    <circle id="abtn" class="loop" cx="0" cy="17" r="9" fill="#3f9d4b"/><text y="20.5" fill="#fff">A</text>
+  </g>
+</g>
+</svg>
