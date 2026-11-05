@@ -123,6 +123,11 @@ define_class!(
             super::license_window::activate();
         }
 
+        #[unsafe(method(activateSetupLicense:))]
+        fn activate_setup_license(&self, _sender: Option<&AnyObject>) {
+            super::setup::activate();
+        }
+
         #[unsafe(method(deactivateLicense:))]
         fn deactivate_license(&self, _sender: Option<&AnyObject>) {
             super::license::deactivate();
@@ -336,6 +341,22 @@ pub fn window(mtm: MainThreadMarker, title: &str, content: &NSStackView) -> Reta
     window.setContentSize(content.fittingSize());
     window.center();
     window
+}
+
+/// Resizes `window` to fit its content after rows were shown or hidden, keeping its top edge.
+pub fn fit(window: &NSWindow) {
+    let Some(view) = window.contentView() else { return };
+    let want = view.fittingSize();
+    let frame = window.frame();
+    let current = window.contentRectForFrameRect(frame).size;
+    if (want.height - current.height).abs() < 0.5 && (want.width - current.width).abs() < 0.5 {
+        return;
+    }
+    let top = frame.origin.y + frame.size.height;
+    window.setContentSize(want);
+    let mut resized = window.frame();
+    resized.origin.y = top - resized.size.height;
+    window.setFrame_display(resized, true);
 }
 
 /// Brings `window` to the front. Stickmouse has no Dock icon, so the app must activate first.

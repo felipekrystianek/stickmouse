@@ -118,7 +118,7 @@ fn refresh_window(window: &Window) {
         Status::Licensed => (
             "Stickmouse is yours".to_string(),
             format!(
-                "Thank you for buying Stickmouse! License {} is active on this Mac.",
+                "License {} is active on this Mac.",
                 license::masked_key().unwrap_or_default()
             ),
         ),
@@ -144,4 +144,5 @@ fn refresh_window(window: &Window) {
     window.entry.setHidden(licensed);
     window.deactivate.setHidden(!licensed);
     window.message.setStringValue(&NSString::from_str(&license::message().unwrap_or_default()));
+    ui::fit(&window.window);
 }

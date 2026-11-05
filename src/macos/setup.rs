@@ -1,5 +1,6 @@
 //! The setup window: shown on first launch, and whenever Accessibility access is missing.
-//! It checks what Stickmouse needs live and links straight to the right System Settings pane.
+//! It checks what Stickmouse needs live, links straight to the right System Settings pane,
+//! and lets the user buy Stickmouse or enter a license key right away.
 
 use std::cell::RefCell;
 use std::fs;
@@ -14,6 +15,7 @@ use objc2_app_kit::{
 };
 use objc2_foundation::NSString;
 
+use super::license::{self, Status};
 use super::{controller, desktop, permissions, ui};
 
 const ROW_WIDTH: f64 = 440.0;
@@ -30,6 +32,10 @@ struct Window {
     window: Retained<NSWindow>,
     access: Row,
     pad: Row,
+    license: Row,
+    entry: Retained<NSStackView>,
+    key: Retained<NSTextField>,
+    message: Retained<NSTextField>,
     login: Retained<NSButton>,
     restart: Retained<NSStackView>,
     refreshed: Instant,
@@ -66,6 +72,14 @@ pub fn show(mtm: MainThreadMarker) {
     });
 }
 
+pub fn activate() {
+    WINDOW.with_borrow(|slot| {
+        if let Some(window) = slot {
+            license::activate(window.key.stringValue().to_string());
+        }
+    });
+}
+
 pub fn finish() {
     if let Err(error) = fs::write(done_file(), "") {
         eprintln!("stickmouse: could not remember finished setup: {error}");
@@ -91,6 +105,16 @@ fn build(mtm: MainThreadMarker) -> Window {
         row(mtm, "Accessibility", ui::button(mtm, "Open Settings", sel!(openAccessibility:)));
     let (pad, pad_row) =
         row(mtm, "Controller", ui::button(mtm, "Bluetooth Settings", sel!(openBluetooth:)));
+    let (license, license_row) = row(
+        mtm,
+        "License",
+        ui::button(mtm, &format!("Buy – {}", license::PRICE), sel!(buyLicense:)),
+    );
+    let key = NSTextField::textFieldWithString(&NSString::new(), mtm);
+    key.setPlaceholderString(Some(&NSString::from_str("Already bought it? Paste your license key")));
+    ui::fixed_width(&key, ROW_WIDTH - 100.0);
+    let entry = ui::hstack(mtm, &[&key, &ui::button(mtm, "Activate", sel!(activateSetupLicense:))], 8.0);
+    let message = ui::secondary(mtm, "", ROW_WIDTH);
 
     let login = ui::checkbox(mtm, "Start Stickmouse when I log in", sel!(toggleLogin:));
     let restart = ui::hstack(
@@ -111,12 +135,15 @@ fn build(mtm: MainThreadMarker) -> Window {
             &ui::bold(mtm, "Welcome to Stickmouse", 20.0),
             &ui::secondary(
                 mtm,
-                "Use your controller as a mouse and media remote. Stickmouse needs one permission from macOS before it can move the pointer.",
+                "Use your controller as a mouse and media remote. Give Stickmouse one permission from macOS, connect your controller, and you are ready. Try it free for 7 days or buy it now.",
                 ROW_WIDTH,
             ),
             &ui::separator(mtm, ROW_WIDTH),
             &access_row,
             &pad_row,
+            &license_row,
+            &entry,
+            &message,
             &ui::separator(mtm, ROW_WIDTH),
             &login,
             &restart,
@@ -125,7 +152,7 @@ fn build(mtm: MainThreadMarker) -> Window {
         14.0,
     );
     let window = ui::window(mtm, "Set Up Stickmouse", &content);
-    Window { window, access, pad, login, restart, refreshed: Instant::now() }
+    Window { window, access, pad, license, entry, key, message, login, restart, refreshed: Instant::now() }
 }
 
 /// Called on the main thread every few milliseconds; checks twice a second while visible.
@@ -175,12 +202,42 @@ fn refresh_window(window: &Window) {
         ),
     }
 
+    let status = license::status();
+    let (symbol, color, text) = match status {
+        Status::Licensed => (
+            "checkmark.circle.fill",
+            NSColor::systemGreenColor(),
+            format!("Licensed. Key {} is active on this Mac.", license::masked_key().unwrap_or_default()),
+        ),
+        Status::Trial { days_left } => (
+            "clock.fill",
+            NSColor::systemBlueColor(),
+            format!(
+                "Free trial: {days_left} {} left. Then {} once, no subscription.",
+                if days_left == 1 { "day" } else { "days" },
+                license::PRICE
+            ),
+        ),
+        Status::Expired => (
+            "exclamationmark.triangle.fill",
+            NSColor::systemOrangeColor(),
+            format!("The trial has ended. Buy Stickmouse for {} to keep using it.", license::PRICE),
+        ),
+    };
+    let licensed = status == Status::Licensed;
+    set(&window.license, symbol, &color, &text, !licensed);
+    window.entry.setHidden(licensed);
+    let message = license::message().unwrap_or_default();
+    window.message.setStringValue(&NSString::from_str(&message));
+    window.message.setHidden(message.is_empty());
+
     window.login.setState(if permissions::login_item_enabled() {
         NSControlStateValueOn
     } else {
         NSControlStateValueOff
     });
     window.restart.setHidden(!restart);
+    ui::fit(&window.window);
 }
 
 fn set(row: &Row, symbol: &str, color: &NSColor, text: &str, show_button: bool) {

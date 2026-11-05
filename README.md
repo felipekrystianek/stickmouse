@@ -1,6 +1,6 @@
 # Stickmouse
 
-Stickmouse turns a game controller into a mouse and media remote. The left stick moves the
+Stickmouse turns an Xbox controller into a mouse and media remote. The left stick moves the
 pointer, the right stick scrolls, and the buttons click, control playback and volume, and switch
 apps. While you steer, the pointer changes to a small circle, which goes away as soon as you touch
 the real mouse.
@@ -15,16 +15,16 @@ It runs on macOS (paid, with a free 7-day trial) and on Linux with KDE Plasma (f
 | Left stick click | Toggle slow, precise pointer |
 | Right stick | Scroll, vertically and sideways |
 | Right stick click | Mute |
-| A / Cross | Left click (hold to drag) |
-| B / Circle | Tap: right click. Hold: Esc |
-| X / Square | Middle click |
-| Y / Triangle | macOS: Mission Control. Linux: open or close the on-screen keyboard |
+| A | Left click (hold to drag) |
+| B | Tap: right click. Hold: Esc |
+| X | Middle click |
+| Y | macOS: Mission Control. Linux: open or close the on-screen keyboard |
 | LB / RB | Previous / next track |
 | LT / RT | Volume down / up (hold to keep changing) |
 | D-pad | Arrow keys |
-| Menu / Options | Play / pause |
-| View / Share | Switch apps (each press moves to the next one) |
-| Xbox / PS button | Tap: Spotlight on macOS, app launcher on Linux. Hold: turn Stickmouse on or off |
+| Menu | Play / pause |
+| View | Switch apps (each press moves to the next one) |
+| Xbox button | Tap: Spotlight on macOS, app launcher on Linux. Hold: turn Stickmouse on or off |
 
 Turn Stickmouse off before playing a game, so the game gets the controller to itself.
 
@@ -68,8 +68,8 @@ again; on Linux: `systemctl --user restart stickmouse`).
 
 ## macOS
 
-Requires macOS 14 Sonoma or later. Works with any controller macOS supports: Xbox Wireless, Xbox
-Elite, PlayStation DualShock 4 and DualSense, and most MFi controllers, over Bluetooth or USB.
+Requires macOS 14 Sonoma or later. Made and tested for the Xbox Wireless Controller, over Bluetooth or USB;
+the default buttons follow the Xbox layout.
 
 ### Install
 
@@ -142,5 +142,5 @@ Report bugs and ask questions at
 
 Stickmouse is licensed under the GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
 
-Xbox is a trademark of Microsoft Corporation; PlayStation and DualSense are trademarks of Sony
-Interactive Entertainment. Stickmouse is not affiliated with or endorsed by Microsoft or Sony.
+Xbox is a trademark of Microsoft Corporation. Stickmouse is not affiliated with or endorsed by
+Microsoft.
