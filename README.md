@@ -88,55 +88,10 @@ Every feature is free for 7 days. After that, a license costs $5, paid once thro
 Buy it from the menu bar icon > Buy Stickmouse or on [stickmouse.pages.dev](https://stickmouse.pages.dev); the
 license key arrives by email and is pasted into the same window.
 
-### Build from source
-
-With Rust installed:
-
-    packaging/macos/build-app.sh
-
-This builds `target/release/Stickmouse.app` and a `.dmg`. Without the maintainer's signing
-certificate the app is signed ad hoc, so macOS asks for Accessibility access again after each
-rebuild.
-
-## Linux (KDE Plasma)
-
-### Requirements
-
-- Arch Linux or an Arch-based distro such as CachyOS, because the install uses a PKGBUILD
-- KDE Plasma on Wayland
-- An Xbox controller. Over Bluetooth, install `xpadneo-dkms` and pair the controller first
-- Write access to `/dev/uinput` and membership of the `input` group
-
-### Install
-
-Run these in a normal terminal, because `makepkg` asks for your password:
-
-    git clone https://github.com/felipekrystianek/stickmouse.git
-    cd stickmouse/packaging
-    makepkg -si
-    systemctl --user daemon-reload
-    systemctl --user enable --now stickmouse
-
-Stickmouse now runs as the `stickmouse.service` user service, starts at every login and shows a
-gamepad icon in the system tray.
-
-To make Y open the on-screen keyboard, choose Plasma Keyboard under System Settings > Keyboard >
-Virtual Keyboard.
-
-The package also sets `disable_shift_mode=1` for `xpadneo`, so that holding the Xbox button can be
-detected. This turns off the driver's own Xbox+A/B/X/Y profile shortcuts and its Xbox+View mouse
-mode.
-
-### Remove
-
-    systemctl --user disable --now stickmouse
-    sudo pacman -R stickmouse
-    rm -rf ~/.icons/stickmouse-circle ~/.config/stickmouse ~/.local/state/stickmouse
-
 ## Support
 
 Report bugs and ask questions at
-[felipekrystianek/stickmouse-support](https://github.com/felipekrystianek/stickmouse-support/issues).
+[GitHub Issues](https://github.com/felipekrystianek/stickmouse/issues).
 
 ## License
 
