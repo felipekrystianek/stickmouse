@@ -228,6 +228,10 @@ pub fn secondary(mtm: MainThreadMarker, text: &str, width: f64) -> Retained<NSTe
     field
 }
 
+pub fn centered(field: &NSTextField) {
+    field.setAlignment(NSTextAlignment::Center);
+}
+
 pub fn right_aligned(field: &NSTextField) {
     field.setAlignment(NSTextAlignment::Right);
 }
@@ -323,7 +327,18 @@ pub fn fixed_height(view: &NSView, height: f64) {
 
 /// A titled, closable window sized to fit `content`.
 pub fn window(mtm: MainThreadMarker, title: &str, content: &NSStackView) -> Retained<NSWindow> {
-    content.setEdgeInsets(objc2_foundation::NSEdgeInsets { top: 20.0, left: 24.0, bottom: 20.0, right: 24.0 });
+    // A stack's side insets are not enforced when it centers its views, so pad it with a container.
+    let container = NSView::new(mtm);
+    container.addSubview(content);
+    content.setTranslatesAutoresizingMaskIntoConstraints(false);
+    for constraint in [
+        content.topAnchor().constraintEqualToAnchor_constant(&container.topAnchor(), 20.0),
+        container.bottomAnchor().constraintEqualToAnchor_constant(&content.bottomAnchor(), 20.0),
+        content.leadingAnchor().constraintEqualToAnchor_constant(&container.leadingAnchor(), 24.0),
+        container.trailingAnchor().constraintEqualToAnchor_constant(&content.trailingAnchor(), 24.0),
+    ] {
+        constraint.setActive(true);
+    }
     // SAFETY: standard window creation on the main thread.
     let window = unsafe {
         NSWindow::initWithContentRect_styleMask_backing_defer(
@@ -337,8 +352,8 @@ pub fn window(mtm: MainThreadMarker, title: &str, content: &NSStackView) -> Reta
     // SAFETY: the window is kept by its module, so AppKit must not free it on close.
     unsafe { window.setReleasedWhenClosed(false) };
     window.setTitle(&NSString::from_str(title));
-    window.setContentView(Some(content));
-    window.setContentSize(content.fittingSize());
+    window.setContentView(Some(&container));
+    window.setContentSize(container.fittingSize());
     window.center();
     window
 }

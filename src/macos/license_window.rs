@@ -78,6 +78,8 @@ fn build(mtm: MainThreadMarker) -> Window {
     ui::fixed_width(&key, WIDTH - 100.0);
     let entry = ui::hstack(mtm, &[&key, &ui::button(mtm, "Activate", sel!(activateLicense:))], 8.0);
     let message = ui::secondary(mtm, "", WIDTH);
+    ui::centered(&detail);
+    ui::centered(&message);
     // Frees the activation slot, for moving Stickmouse to a new Mac.
     let deactivate = ui::button(mtm, "Deactivate on This Mac", sel!(deactivateLicense:));
 
