@@ -1,0 +1,40 @@
+name: License or purchase
+description: Activation, moving to a new Mac, or a refund.
+title: "[License]: "
+labels: ["license"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not paste your full license key here.** This repository is public. The last 4 characters of the key are enough.
+
+        You can also simply reply to the receipt email you got from Polar. Refunds within 14 days of purchase are given with no questions asked.
+  - type: dropdown
+    id: topic
+    attributes:
+      label: What do you need help with?
+      options:
+        - Activation doesn't work
+        - Moving to a new Mac
+        - Refund
+        - Something else
+    validations:
+      required: true
+  - type: input
+    id: key
+    attributes:
+      label: Last 4 characters of your license key
+      description: Only the last 4 characters, never the full key.
+      placeholder: e.g. 7F3A
+  - type: input
+    id: version
+    attributes:
+      label: Stickmouse version
+      description: Shown in the Stickmouse menu.
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What happened? Include any error message you saw.
+    validations:
+      required: true

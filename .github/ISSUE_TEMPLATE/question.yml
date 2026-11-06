@@ -1,0 +1,16 @@
+name: Question
+description: Ask how something works, or suggest an idea.
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: macOS version, Stickmouse version and controller (if relevant)
+      placeholder: e.g. macOS 26.1, Stickmouse 1.0.0, Xbox Wireless Controller

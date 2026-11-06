@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in Stickmouse doesn't work as expected.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting! The details below help find the cause quickly.
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description: Apple menu → About This Mac.
+      placeholder: e.g. macOS 26.1
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Stickmouse version
+      description: Shown in the Stickmouse menu.
+      placeholder: e.g. 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: controller
+    attributes:
+      label: Controller model and connection
+      placeholder: e.g. Xbox Wireless Controller over Bluetooth or USB
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, screen recordings, or other details.
