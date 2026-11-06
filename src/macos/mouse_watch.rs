@@ -9,8 +9,8 @@ use std::time::{Duration, Instant};
 
 use objc2_core_foundation::{CFMachPort, CFRunLoop, kCFRunLoopCommonModes};
 use objc2_core_graphics::{
-    CGEvent, CGEventField, CGEventMask, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement,
-    CGEventTapProxy, CGEventType,
+    CGEvent, CGEventField, CGEventMask, CGEventTapLocation, CGEventTapOptions, CGEventTapPlacement, CGEventTapProxy,
+    CGEventType,
 };
 
 use super::output::EVENT_MARK;
@@ -32,11 +32,8 @@ pub fn spawn(messages: Sender<Message>) {
 
 fn run(messages: Sender<Message>) {
     // Lives for the whole process; the tap callback reads it from its own run loop.
-    let watch: &'static Watch = Box::leak(Box::new(Watch {
-        messages,
-        last_report: Cell::new(None),
-        tap: Cell::new(std::ptr::null()),
-    }));
+    let watch: &'static Watch =
+        Box::leak(Box::new(Watch { messages, last_report: Cell::new(None), tap: Cell::new(std::ptr::null()) }));
     let mask: CGEventMask = [
         CGEventType::MouseMoved,
         CGEventType::LeftMouseDragged,

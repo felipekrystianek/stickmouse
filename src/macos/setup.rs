@@ -10,8 +10,7 @@ use std::time::{Duration, Instant};
 use objc2::rc::Retained;
 use objc2::{MainThreadMarker, sel};
 use objc2_app_kit::{
-    NSButton, NSColor, NSControlStateValueOff, NSControlStateValueOn, NSImageView, NSStackView,
-    NSTextField, NSWindow,
+    NSButton, NSColor, NSControlStateValueOff, NSControlStateValueOn, NSImageView, NSStackView, NSTextField, NSWindow,
 };
 use objc2_foundation::NSString;
 
@@ -101,15 +100,10 @@ fn row(mtm: MainThreadMarker, title: &str, button: Retained<NSButton>) -> (Row, 
 }
 
 fn build(mtm: MainThreadMarker) -> Window {
-    let (access, access_row) =
-        row(mtm, "Accessibility", ui::button(mtm, "Open Settings", sel!(openAccessibility:)));
-    let (pad, pad_row) =
-        row(mtm, "Controller", ui::button(mtm, "Bluetooth Settings", sel!(openBluetooth:)));
-    let (license, license_row) = row(
-        mtm,
-        "License",
-        ui::button(mtm, &format!("Buy – {}", license::PRICE), sel!(buyLicense:)),
-    );
+    let (access, access_row) = row(mtm, "Accessibility", ui::button(mtm, "Open Settings", sel!(openAccessibility:)));
+    let (pad, pad_row) = row(mtm, "Controller", ui::button(mtm, "Bluetooth Settings", sel!(openBluetooth:)));
+    let (license, license_row) =
+        row(mtm, "License", ui::button(mtm, &format!("Buy – {}", license::PRICE), sel!(buyLicense:)));
     let key = NSTextField::textFieldWithString(&NSString::new(), mtm);
     key.setPlaceholderString(Some(&NSString::from_str("Already bought it? Paste your license key")));
     ui::fixed_width(&key, ROW_WIDTH - 100.0);
@@ -174,7 +168,11 @@ fn refresh_window(window: &Window) {
     let (symbol, color, text) = if restart {
         ("arrow.clockwise.circle.fill", NSColor::systemOrangeColor(), "Allowed. Restart Stickmouse to finish.")
     } else if granted {
-        ("checkmark.circle.fill", NSColor::systemGreenColor(), "Allowed. Stickmouse can move the pointer, click and press keys.")
+        (
+            "checkmark.circle.fill",
+            NSColor::systemGreenColor(),
+            "Allowed. Stickmouse can move the pointer, click and press keys.",
+        )
     } else {
         (
             "exclamationmark.triangle.fill",

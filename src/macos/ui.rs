@@ -239,17 +239,13 @@ pub fn right_aligned(field: &NSTextField) {
 pub fn button(mtm: MainThreadMarker, title: &str, action: Sel) -> Retained<NSButton> {
     let target = actions(mtm);
     // SAFETY: `action` is one of the selectors defined on Actions.
-    unsafe {
-        NSButton::buttonWithTitle_target_action(&NSString::from_str(title), Some(&target), Some(action), mtm)
-    }
+    unsafe { NSButton::buttonWithTitle_target_action(&NSString::from_str(title), Some(&target), Some(action), mtm) }
 }
 
 pub fn checkbox(mtm: MainThreadMarker, title: &str, action: Sel) -> Retained<NSButton> {
     let target = actions(mtm);
     // SAFETY: as above.
-    unsafe {
-        NSButton::checkboxWithTitle_target_action(&NSString::from_str(title), Some(&target), Some(action), mtm)
-    }
+    unsafe { NSButton::checkboxWithTitle_target_action(&NSString::from_str(title), Some(&target), Some(action), mtm) }
 }
 
 pub fn slider(mtm: MainThreadMarker, value: f64, min: f64, max: f64, action: Sel) -> Retained<NSSlider> {

@@ -55,11 +55,8 @@ pub fn current_theme() -> Option<String> {
 }
 
 fn apply_theme(theme: &str) -> bool {
-    let result = Command::new("plasma-apply-cursortheme")
-        .arg(theme)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status();
+    let result =
+        Command::new("plasma-apply-cursortheme").arg(theme).stdout(Stdio::null()).stderr(Stdio::null()).status();
     match result {
         Ok(status) if status.success() => true,
         other => {
@@ -185,9 +182,7 @@ pub fn mission_control() {
 }
 
 pub fn notify(title: &str, body: &str) {
-    let spawned = Command::new("notify-send")
-        .args(["-a", "Stickmouse", "-i", "input-gamepad", title, body])
-        .spawn();
+    let spawned = Command::new("notify-send").args(["-a", "Stickmouse", "-i", "input-gamepad", title, body]).spawn();
     match spawned {
         Ok(mut child) => {
             thread::spawn(move || child.wait());

@@ -4,15 +4,15 @@
 use std::cell::RefCell;
 use std::io;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, Once};
 use std::time::{Duration, Instant};
-use std::sync::atomic::{AtomicBool, Ordering};
 
-use objc2::{MainThreadMarker, MainThreadOnly};
 use objc2::rc::Retained;
+use objc2::{MainThreadMarker, MainThreadOnly};
 use objc2_app_kit::{
-    NSBackingStoreType, NSColor, NSEvent, NSScreenSaverWindowLevel, NSWindow,
-    NSWindowCollectionBehavior, NSWindowStyleMask,
+    NSBackingStoreType, NSColor, NSEvent, NSScreenSaverWindowLevel, NSWindow, NSWindowCollectionBehavior,
+    NSWindowStyleMask,
 };
 use objc2_core_foundation::{CFBoolean, CFString, CGPoint, CGRect, CGSize, kCFBooleanTrue};
 use objc2_core_graphics::{CGDisplayHideCursor, CGDisplayShowCursor, CGMainDisplayID};
@@ -39,12 +39,7 @@ thread_local! {
 #[link(name = "CoreGraphics", kind = "framework")]
 unsafe extern "C" {
     fn _CGSDefaultConnection() -> i32;
-    fn CGSSetConnectionProperty(
-        connection: i32,
-        target: i32,
-        key: &CFString,
-        value: &CFBoolean,
-    ) -> i32;
+    fn CGSSetConnectionProperty(connection: i32, target: i32, key: &CFString, value: &CFBoolean) -> i32;
 }
 
 fn allow_hiding_in_background() {
@@ -183,18 +178,10 @@ fn make_window(mtm: MainThreadMarker) -> (Retained<NSWindow>, f64) {
     (window, size)
 }
 
-fn circle(
-    centre: f64,
-    radius: f64,
-    border: f64,
-    border_color: &NSColor,
-    fill: Option<&NSColor>,
-) -> Retained<CALayer> {
+fn circle(centre: f64, radius: f64, border: f64, border_color: &NSColor, fill: Option<&NSColor>) -> Retained<CALayer> {
     let layer = CALayer::new();
-    layer.setFrame(CGRect::new(
-        CGPoint::new(centre - radius, centre - radius),
-        CGSize::new(radius * 2.0, radius * 2.0),
-    ));
+    layer
+        .setFrame(CGRect::new(CGPoint::new(centre - radius, centre - radius), CGSize::new(radius * 2.0, radius * 2.0)));
     layer.setCornerRadius(radius);
     layer.setBorderWidth(border);
     layer.setBorderColor(Some(&border_color.CGColor()));

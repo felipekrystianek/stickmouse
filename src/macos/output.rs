@@ -4,13 +4,12 @@
 use std::io;
 use std::time::{Duration, Instant};
 
+use objc2_app_kit::{NSEvent, NSEventModifierFlags, NSEventType};
 use objc2_core_foundation::{CFRetained, CGPoint, CGRect};
 use objc2_core_graphics::{
-    CGDirectDisplayID, CGDisplayBounds, CGEvent, CGEventField, CGEventFlags, CGEventSource,
-    CGEventSourceStateID, CGEventTapLocation, CGEventType, CGGetActiveDisplayList, CGMouseButton,
-    CGScrollEventUnit,
+    CGDirectDisplayID, CGDisplayBounds, CGEvent, CGEventField, CGEventFlags, CGEventSource, CGEventSourceStateID,
+    CGEventTapLocation, CGEventType, CGGetActiveDisplayList, CGMouseButton, CGScrollEventUnit,
 };
-use objc2_app_kit::{NSEvent, NSEventModifierFlags, NSEventType};
 use objc2_foundation::NSPoint;
 
 use super::keys;
@@ -118,8 +117,7 @@ impl Output {
         } else {
             (CGEventType::MouseMoved, CGMouseButton::Left)
         };
-        let event = CGEvent::new_mouse_event(Some(&self.source), kind, to, button)
-            .ok_or_else(event_error)?;
+        let event = CGEvent::new_mouse_event(Some(&self.source), kind, to, button).ok_or_else(event_error)?;
         CGEvent::set_integer_value_field(Some(&event), CGEventField::MouseEventDeltaX, dx.into());
         CGEvent::set_integer_value_field(Some(&event), CGEventField::MouseEventDeltaY, dy.into());
         self.post(&event);
@@ -136,30 +134,18 @@ impl Output {
             return Ok(());
         }
         // Quartz counts the second wheel positive to the left, the engine positive to the right.
-        let event = CGEvent::new_scroll_wheel_event2(
-            Some(&self.source),
-            CGScrollEventUnit::Pixel,
-            2,
-            pixels.0,
-            -pixels.1,
-            0,
-        )
-        .ok_or_else(event_error)?;
+        let event =
+            CGEvent::new_scroll_wheel_event2(Some(&self.source), CGScrollEventUnit::Pixel, 2, pixels.0, -pixels.1, 0)
+                .ok_or_else(event_error)?;
         self.post(&event);
         Ok(())
     }
 
     fn mouse_button(&mut self, button: MouseButton, down: bool) -> io::Result<()> {
         let (index, cg_button, down_type, up_type) = match button {
-            MouseButton::Left => {
-                (0, CGMouseButton::Left, CGEventType::LeftMouseDown, CGEventType::LeftMouseUp)
-            }
-            MouseButton::Right => {
-                (1, CGMouseButton::Right, CGEventType::RightMouseDown, CGEventType::RightMouseUp)
-            }
-            MouseButton::Middle => {
-                (2, CGMouseButton::Center, CGEventType::OtherMouseDown, CGEventType::OtherMouseUp)
-            }
+            MouseButton::Left => (0, CGMouseButton::Left, CGEventType::LeftMouseDown, CGEventType::LeftMouseUp),
+            MouseButton::Right => (1, CGMouseButton::Right, CGEventType::RightMouseDown, CGEventType::RightMouseUp),
+            MouseButton::Middle => (2, CGMouseButton::Center, CGEventType::OtherMouseDown, CGEventType::OtherMouseUp),
         };
         let position = cursor_position();
         // Quartz does not count clicks for posted events, so double clicks are counted here.
@@ -183,8 +169,7 @@ impl Output {
         self.held[index] = down;
 
         let kind = if down { down_type } else { up_type };
-        let event = CGEvent::new_mouse_event(Some(&self.source), kind, position, cg_button)
-            .ok_or_else(event_error)?;
+        let event = CGEvent::new_mouse_event(Some(&self.source), kind, position, cg_button).ok_or_else(event_error)?;
         CGEvent::set_integer_value_field(Some(&event), CGEventField::MouseEventClickState, count);
         self.post(&event);
         Ok(())
@@ -212,8 +197,7 @@ impl Output {
     /// only stays open while it sees Command held this way.
     fn flags_changed(&self, key: Key) -> io::Result<()> {
         let code = keys::code(key).ok_or_else(event_error)?;
-        let event = CGEvent::new_keyboard_event(Some(&self.source), code, true)
-            .ok_or_else(event_error)?;
+        let event = CGEvent::new_keyboard_event(Some(&self.source), code, true).ok_or_else(event_error)?;
         CGEvent::set_type(Some(&event), CGEventType::FlagsChanged);
         CGEvent::set_flags(Some(&event), self.flags());
         self.post(&event);
@@ -221,8 +205,7 @@ impl Output {
     }
 
     fn key_code(&self, code: u16, down: bool, flags: CGEventFlags) -> io::Result<()> {
-        let event = CGEvent::new_keyboard_event(Some(&self.source), code, down)
-            .ok_or_else(event_error)?;
+        let event = CGEvent::new_keyboard_event(Some(&self.source), code, down).ok_or_else(event_error)?;
         CGEvent::set_flags(Some(&event), flags);
         self.post(&event);
         Ok(())
@@ -291,8 +274,7 @@ fn keep_on_screen(from: CGPoint, to: CGPoint) -> CGPoint {
     if displays.iter().any(|bounds| contains(bounds, to)) {
         return to;
     }
-    let Some(bounds) = displays.iter().find(|bounds| contains(bounds, from)).or(displays.first())
-    else {
+    let Some(bounds) = displays.iter().find(|bounds| contains(bounds, from)).or(displays.first()) else {
         return to;
     };
     CGPoint::new(

@@ -6,8 +6,8 @@ use std::time::{Duration, Instant};
 use objc2::rc::Retained;
 use objc2::{MainThreadMarker, sel};
 use objc2_app_kit::{
-    NSButton, NSColor, NSControlStateValueOff, NSControlStateValueOn, NSImageView, NSSlider,
-    NSTextField, NSView, NSWindow,
+    NSButton, NSColor, NSControlStateValueOff, NSControlStateValueOn, NSImageView, NSSlider, NSTextField, NSView,
+    NSWindow,
 };
 use objc2_foundation::NSString;
 
@@ -254,9 +254,7 @@ fn build(mtm: MainThreadMarker) -> Window {
     let access_icon = ui::symbol(mtm, "checkmark.circle.fill", &NSColor::systemGreenColor(), 18.0);
     let access_text = ui::label(mtm, "");
     let access_button = ui::button(mtm, "Open Privacy Settings", sel!(openAccessibility:));
-    rows.push(
-        ui::hstack(mtm, &[&access_icon, &access_text, &access_button], 8.0).into_super(),
-    );
+    rows.push(ui::hstack(mtm, &[&access_icon, &access_text, &access_button], 8.0).into_super());
 
     // Two rows: the four buttons side by side are wider than the window.
     let footer = ui::hstack(
@@ -365,7 +363,11 @@ fn refresh_status(window: &Window) {
         NSControlStateValueOff
     });
     let (symbol, color, text) = if permissions::needs_restart() {
-        ("arrow.clockwise.circle.fill", NSColor::systemOrangeColor(), "Accessibility allowed – restart Stickmouse to use it")
+        (
+            "arrow.clockwise.circle.fill",
+            NSColor::systemOrangeColor(),
+            "Accessibility allowed – restart Stickmouse to use it",
+        )
     } else if permissions::accessibility_granted() {
         ("checkmark.circle.fill", NSColor::systemGreenColor(), "Accessibility access is on")
     } else {

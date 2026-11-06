@@ -12,8 +12,7 @@ use objc2_service_management::{SMAppService, SMAppServiceStatus};
 use super::tray;
 use crate::Message;
 
-const ACCESSIBILITY_PANE: &str =
-    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility";
+const ACCESSIBILITY_PANE: &str = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility";
 const BLUETOOTH_PANE: &str = "x-apple.systempreferences:com.apple.BluetoothSettings";
 
 #[link(name = "ApplicationServices", kind = "framework")]
@@ -75,9 +74,7 @@ pub fn set_login_item_from(checkbox: &NSButton) {
 /// release the single-instance lock.
 pub fn restart() {
     let target = bundle_path().unwrap_or_else(|| std::env::current_exe().unwrap_or_default());
-    let spawned = Command::new("/bin/sh")
-        .args(["-c", "sleep 1; open \"$0\"", &target.to_string_lossy()])
-        .spawn();
+    let spawned = Command::new("/bin/sh").args(["-c", "sleep 1; open \"$0\"", &target.to_string_lossy()]).spawn();
     match spawned {
         Ok(_) => tray::send(Message::Quit),
         Err(error) => eprintln!("stickmouse: could not restart: {error}"),

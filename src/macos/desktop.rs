@@ -84,9 +84,8 @@ fn applescript_string(text: &str) -> String {
 
 /// Matches the Linux wording, where the kernel reports "Low" for a nearly empty controller.
 pub fn battery_level() -> io::Result<Option<String>> {
-    Ok(controller::battery().map(|level| {
-        if level <= LOW_BATTERY { "Low".to_string() } else { format!("{:.0}%", level * 100.0) }
-    }))
+    Ok(controller::battery()
+        .map(|level| if level <= LOW_BATTERY { "Low".to_string() } else { format!("{:.0}%", level * 100.0) }))
 }
 
 static SETTINGS_REQUESTED: AtomicBool = AtomicBool::new(false);

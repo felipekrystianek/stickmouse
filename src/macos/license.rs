@@ -54,10 +54,8 @@ fn file() -> std::path::PathBuf {
 fn with_stored<T>(f: impl FnOnce(&mut Stored) -> T) -> T {
     let mut guard = STORED.lock().unwrap();
     let stored = guard.get_or_insert_with(|| {
-        let mut stored: Stored = fs::read_to_string(file())
-            .ok()
-            .and_then(|text| toml::from_str(&text).ok())
-            .unwrap_or_default();
+        let mut stored: Stored =
+            fs::read_to_string(file()).ok().and_then(|text| toml::from_str(&text).ok()).unwrap_or_default();
         if stored.trial_started.is_none() {
             stored.trial_started = Some(now());
             save(&stored);
@@ -68,9 +66,7 @@ fn with_stored<T>(f: impl FnOnce(&mut Stored) -> T) -> T {
 }
 
 fn save(stored: &Stored) {
-    let written = toml::to_string(stored)
-        .map_err(std::io::Error::other)
-        .and_then(|text| fs::write(file(), text));
+    let written = toml::to_string(stored).map_err(std::io::Error::other).and_then(|text| fs::write(file(), text));
     if let Err(error) = written {
         eprintln!("stickmouse: could not save the license: {error}");
     }
@@ -144,9 +140,7 @@ pub fn activate(key: String) {
                 });
                 set_message("Thank you! Stickmouse is activated.");
             }
-            Ok((403, _)) => set_message(
-                "This key is already used on the maximum number of Macs, or it was refunded.",
-            ),
+            Ok((403, _)) => set_message("This key is already used on the maximum number of Macs, or it was refunded."),
             Ok((404 | 422, _)) => set_message("That key was not found. Check it and try again."),
             Ok((code, _)) => set_message(format!("The license server answered {code}. Try again later.")),
             Err(error) => set_message(format!("Could not reach the license server: {error}")),
@@ -290,11 +284,7 @@ mod tests {
 
     #[test]
     fn an_activated_key_unlocks_after_the_trial() {
-        let stored = Stored {
-            key: Some("KEY".into()),
-            activation_id: Some("id".into()),
-            ..trial(30)
-        };
+        let stored = Stored { key: Some("KEY".into()), activation_id: Some("id".into()), ..trial(30) };
         assert_eq!(status_at(&stored, 100 * DAY), Status::Licensed);
     }
 
@@ -306,12 +296,8 @@ mod tests {
 
     #[test]
     fn forgetting_the_key_keeps_the_trial_start() {
-        let mut stored = Stored {
-            key: Some("KEY".into()),
-            activation_id: Some("id".into()),
-            validated_at: Some(5),
-            ..trial(30)
-        };
+        let mut stored =
+            Stored { key: Some("KEY".into()), activation_id: Some("id".into()), validated_at: Some(5), ..trial(30) };
         forget_key(&mut stored);
         assert_eq!(stored, trial(30));
         assert_eq!(status_at(&stored, 100 * DAY), Status::Expired);

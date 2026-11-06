@@ -13,10 +13,7 @@ thread_local! {
 }
 
 fn load() -> Config {
-    fs::read_to_string(desktop::config_file())
-        .ok()
-        .and_then(|text| Config::parse(&text).ok())
-        .unwrap_or_default()
+    fs::read_to_string(desktop::config_file()).ok().and_then(|text| Config::parse(&text).ok()).unwrap_or_default()
 }
 
 /// The current settings, read from the file the first time.

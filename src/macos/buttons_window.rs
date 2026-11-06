@@ -8,8 +8,7 @@ use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
 use objc2::{MainThreadMarker, MainThreadOnly, sel};
 use objc2_app_kit::{
-    NSEvent, NSEventMask, NSEventModifierFlags, NSMenu, NSMenuItem, NSPopUpButton, NSTextField,
-    NSView, NSWindow,
+    NSEvent, NSEventMask, NSEventModifierFlags, NSMenu, NSMenuItem, NSPopUpButton, NSTextField, NSView, NSWindow,
 };
 use objc2_foundation::{NSPoint, NSRect, NSSize, NSString};
 
@@ -301,9 +300,9 @@ fn start_recording(mtm: MainThreadMarker, control: Control, hold: bool) {
 }
 
 fn recorded(mtm: MainThreadMarker, code: u16, flags: NSEventModifierFlags) {
-    let Some((control, hold)) = WINDOW.with_borrow(|slot| {
-        slot.as_ref()?.recording.as_ref().map(|(control, hold, _)| (*control, *hold))
-    }) else {
+    let Some((control, hold)) =
+        WINDOW.with_borrow(|slot| slot.as_ref()?.recording.as_ref().map(|(control, hold, _)| (*control, *hold)))
+    else {
         return;
     };
     let Some(key) = keys::key(code) else {

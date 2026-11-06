@@ -44,10 +44,8 @@ impl Output {
         for key in Key::all() {
             keys.insert(key_code(key));
         }
-        let keyboard = VirtualDevice::builder()?
-            .name(&format!("{DEVICE_PREFIX} keyboard"))
-            .with_keys(&keys)?
-            .build()?;
+        let keyboard =
+            VirtualDevice::builder()?.name(&format!("{DEVICE_PREFIX} keyboard")).with_keys(&keys)?.build()?;
 
         Ok(Self { mouse, keyboard, wheel: (0, 0) })
     }
@@ -55,10 +53,9 @@ impl Output {
     /// Performs an input action. Other actions are not this module's job and are ignored.
     pub fn apply(&mut self, action: Action) -> io::Result<()> {
         match action {
-            Action::Move(x, y) => self.mouse.emit(&[
-                relative(RelativeAxisCode::REL_X, x),
-                relative(RelativeAxisCode::REL_Y, y),
-            ]),
+            Action::Move(x, y) => {
+                self.mouse.emit(&[relative(RelativeAxisCode::REL_X, x), relative(RelativeAxisCode::REL_Y, y)])
+            }
             Action::Scroll(vertical, horizontal) => self.scroll(vertical, horizontal),
             Action::MouseDown(button) => self.mouse.emit(&[key(mouse_code(button), 1)]),
             Action::MouseUp(button) => self.mouse.emit(&[key(mouse_code(button), 0)]),
@@ -153,11 +150,31 @@ fn key_code(key: Key) -> KeyCode {
 /// Linux key codes follow the QWERTY layout, not the alphabet.
 fn letter_code(letter: u8) -> KeyCode {
     const LETTERS: [KeyCode; 26] = [
-        KeyCode::KEY_A, KeyCode::KEY_B, KeyCode::KEY_C, KeyCode::KEY_D, KeyCode::KEY_E,
-        KeyCode::KEY_F, KeyCode::KEY_G, KeyCode::KEY_H, KeyCode::KEY_I, KeyCode::KEY_J,
-        KeyCode::KEY_K, KeyCode::KEY_L, KeyCode::KEY_M, KeyCode::KEY_N, KeyCode::KEY_O,
-        KeyCode::KEY_P, KeyCode::KEY_Q, KeyCode::KEY_R, KeyCode::KEY_S, KeyCode::KEY_T,
-        KeyCode::KEY_U, KeyCode::KEY_V, KeyCode::KEY_W, KeyCode::KEY_X, KeyCode::KEY_Y,
+        KeyCode::KEY_A,
+        KeyCode::KEY_B,
+        KeyCode::KEY_C,
+        KeyCode::KEY_D,
+        KeyCode::KEY_E,
+        KeyCode::KEY_F,
+        KeyCode::KEY_G,
+        KeyCode::KEY_H,
+        KeyCode::KEY_I,
+        KeyCode::KEY_J,
+        KeyCode::KEY_K,
+        KeyCode::KEY_L,
+        KeyCode::KEY_M,
+        KeyCode::KEY_N,
+        KeyCode::KEY_O,
+        KeyCode::KEY_P,
+        KeyCode::KEY_Q,
+        KeyCode::KEY_R,
+        KeyCode::KEY_S,
+        KeyCode::KEY_T,
+        KeyCode::KEY_U,
+        KeyCode::KEY_V,
+        KeyCode::KEY_W,
+        KeyCode::KEY_X,
+        KeyCode::KEY_Y,
         KeyCode::KEY_Z,
     ];
     LETTERS[usize::from(letter.saturating_sub(b'a')).min(25)]

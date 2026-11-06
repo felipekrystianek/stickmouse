@@ -83,14 +83,7 @@ impl Key {
         keys.extend((b'a'..=b'z').map(Key::Letter));
         keys.extend((0..=9).map(Key::Digit));
         keys.extend((1..=12).map(Key::F));
-        keys.extend([
-            Key::PlayPause,
-            Key::NextTrack,
-            Key::PreviousTrack,
-            Key::VolumeUp,
-            Key::VolumeDown,
-            Key::Mute,
-        ]);
+        keys.extend([Key::PlayPause, Key::NextTrack, Key::PreviousTrack, Key::VolumeUp, Key::VolumeDown, Key::Mute]);
         keys
     }
 
@@ -280,10 +273,7 @@ impl Command {
             Command::Keys(shortcut) => format!("Key: {}", shortcut.label()),
             other => {
                 let name = other.to_string();
-                NAMED_COMMANDS
-                    .iter()
-                    .find(|(named, _)| *named == name)
-                    .map_or(name, |(_, label)| label.to_string())
+                NAMED_COMMANDS.iter().find(|(named, _)| *named == name).map_or(name, |(_, label)| label.to_string())
             }
         }
     }
@@ -569,7 +559,10 @@ mod tests {
     fn every_key_has_a_name_that_parses_back() {
         for key in Key::all() {
             let name = key.name();
-            if !matches!(key, Key::PlayPause | Key::NextTrack | Key::PreviousTrack | Key::VolumeUp | Key::VolumeDown | Key::Mute) {
+            if !matches!(
+                key,
+                Key::PlayPause | Key::NextTrack | Key::PreviousTrack | Key::VolumeUp | Key::VolumeDown | Key::Mute
+            ) {
                 assert_eq!(Key::parse(&name), Some(key), "{name}");
             }
         }

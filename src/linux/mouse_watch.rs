@@ -53,26 +53,23 @@ fn is_real_mouse(device: &Device) -> bool {
     if device.name().is_some_and(|name| ours(name) || name.contains("Xbox")) {
         return false;
     }
-    let moves = device.supported_relative_axes().is_some_and(|axes| {
-        axes.contains(RelativeAxisCode::REL_X) && axes.contains(RelativeAxisCode::REL_Y)
-    });
+    let moves = device
+        .supported_relative_axes()
+        .is_some_and(|axes| axes.contains(RelativeAxisCode::REL_X) && axes.contains(RelativeAxisCode::REL_Y));
     let clicks = device.supported_keys().is_some_and(|keys| keys.contains(KeyCode::BTN_LEFT));
     moves && clicks
 }
 
 fn wait(mice: &[Device]) -> io::Result<()> {
-    let mut polls: Vec<libc::pollfd> = mice
-        .iter()
-        .map(|mouse| libc::pollfd { fd: mouse.as_raw_fd(), events: libc::POLLIN, revents: 0 })
-        .collect();
+    let mut polls: Vec<libc::pollfd> =
+        mice.iter().map(|mouse| libc::pollfd { fd: mouse.as_raw_fd(), events: libc::POLLIN, revents: 0 }).collect();
     if polls.is_empty() {
         thread::sleep(RESCAN_INTERVAL);
         return Err(io::ErrorKind::NotFound.into());
     }
     // SAFETY: the pointer and length describe the `polls` vector, which outlives the call.
-    let ready = unsafe {
-        libc::poll(polls.as_mut_ptr(), polls.len() as libc::nfds_t, RESCAN_INTERVAL.as_millis() as i32)
-    };
+    let ready =
+        unsafe { libc::poll(polls.as_mut_ptr(), polls.len() as libc::nfds_t, RESCAN_INTERVAL.as_millis() as i32) };
     if ready < 0 { Err(io::Error::last_os_error()) } else { Ok(()) }
 }
 

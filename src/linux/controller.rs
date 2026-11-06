@@ -8,8 +8,7 @@ use std::thread;
 use std::time::Duration;
 
 use evdev::{
-    AbsInfo, AbsoluteAxisCode, Device, EventSummary, FFEffectData, FFEffectKind, FFReplay,
-    FFTrigger, KeyCode,
+    AbsInfo, AbsoluteAxisCode, Device, EventSummary, FFEffectData, FFEffectKind, FFReplay, FFTrigger, KeyCode,
 };
 
 use crate::Message;
@@ -66,9 +65,7 @@ fn is_controller(device: &Device) -> bool {
     let has_keys = device
         .supported_keys()
         .is_some_and(|keys| keys.contains(KeyCode::BTN_SOUTH) && keys.contains(KeyCode::BTN_MODE));
-    let has_stick = device
-        .supported_absolute_axes()
-        .is_some_and(|axes| axes.contains(AbsoluteAxisCode::ABS_X));
+    let has_stick = device.supported_absolute_axes().is_some_and(|axes| axes.contains(AbsoluteAxisCode::ABS_X));
     device.input_id().vendor() == MICROSOFT_VENDOR && has_keys && has_stick
 }
 
@@ -82,10 +79,7 @@ fn serve(
     if *grab {
         device.grab()?;
     }
-    let ranges: HashMap<u16, AbsInfo> = device
-        .get_absinfo()?
-        .map(|(code, info)| (code.0, info))
-        .collect();
+    let ranges: HashMap<u16, AbsInfo> = device.get_absinfo()?.map(|(code, info)| (code.0, info)).collect();
     eprintln!("stickmouse: using controller {:?}", device.name().unwrap_or("unknown"));
     let _ = messages.send(Message::Connected(true));
 

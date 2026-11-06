@@ -85,16 +85,7 @@ fn build(mtm: MainThreadMarker) -> Window {
 
     let content = ui::centered_vstack(
         mtm,
-        &[
-            &ui::app_icon(mtm, 72.0),
-            &title,
-            &detail,
-            &buy,
-            &ui::separator(mtm, WIDTH),
-            &entry,
-            &deactivate,
-            &message,
-        ],
+        &[&ui::app_icon(mtm, 72.0), &title, &detail, &buy, &ui::separator(mtm, WIDTH), &entry, &deactivate, &message],
         12.0,
     );
     let window = ui::window(mtm, "Stickmouse License", &content);
@@ -119,10 +110,7 @@ fn refresh_window(window: &Window) {
     let (title, detail) = match status {
         Status::Licensed => (
             "Stickmouse is yours".to_string(),
-            format!(
-                "License {} is active on this Mac.",
-                license::masked_key().unwrap_or_default()
-            ),
+            format!("License {} is active on this Mac.", license::masked_key().unwrap_or_default()),
         ),
         Status::Trial { days_left } => (
             format!("{days_left} {} left in your trial", if days_left == 1 { "day" } else { "days" }),

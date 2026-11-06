@@ -17,8 +17,18 @@ const TOC_ENTRY: u32 = 12;
 const IMAGE_HEADER: u32 = 36;
 // Used if the reference theme is missing, so the common shapes still become circles.
 const CORE_SHAPES: [&str; 12] = [
-    "arrow", "left_ptr", "pointer", "hand1", "hand2", "pointing_hand", "text", "xterm", "ibeam",
-    "wait", "watch", "progress",
+    "arrow",
+    "left_ptr",
+    "pointer",
+    "hand1",
+    "hand2",
+    "pointing_hand",
+    "text",
+    "xterm",
+    "ibeam",
+    "wait",
+    "watch",
+    "progress",
 ];
 
 /// Writes the theme under `icons_dir`, leaving it untouched if it is already up to date.
@@ -34,10 +44,7 @@ pub fn install(icons_dir: &Path, scale: f32) -> io::Result<()> {
     }
 
     let shapes: Vec<String> = match fs::read_dir(REFERENCE_SHAPES) {
-        Ok(entries) => entries
-            .flatten()
-            .map(|entry| entry.file_name().to_string_lossy().into_owned())
-            .collect(),
+        Ok(entries) => entries.flatten().map(|entry| entry.file_name().to_string_lossy().into_owned()).collect(),
         Err(_) => CORE_SHAPES.iter().map(ToString::to_string).collect(),
     };
     for shape in shapes.iter().filter(|shape| *shape != "default") {

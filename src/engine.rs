@@ -182,11 +182,7 @@ impl Engine {
 
     /// Advances everything time-based: stick motion, button holds and repeats.
     pub fn tick(&mut self, now: Duration) -> Vec<Action> {
-        let dt = self
-            .last_tick
-            .map_or(Duration::ZERO, |last| now.saturating_sub(last))
-            .min(MAX_TICK)
-            .as_secs_f32();
+        let dt = self.last_tick.map_or(Duration::ZERO, |last| now.saturating_sub(last)).min(MAX_TICK).as_secs_f32();
         self.last_tick = Some(now);
 
         if let Some(down_at) = self.xbox_down_at
@@ -254,8 +250,7 @@ impl Engine {
             Axis::RightX => self.right.0 = value,
             Axis::RightY => self.right.1 = value,
             Axis::LeftTrigger | Axis::RightTrigger => {
-                let control =
-                    if axis == Axis::LeftTrigger { Control::LeftTrigger } else { Control::RightTrigger };
+                let control = if axis == Axis::LeftTrigger { Control::LeftTrigger } else { Control::RightTrigger };
                 if !self.enabled {
                     return;
                 }
@@ -438,9 +433,8 @@ impl Engine {
                 self.actions.push(Action::Move(x.trunc() as i32, y.trunc() as i32));
             }
             self.last_steer = now;
-            let real_mouse_has_priority = self
-                .real_mouse_at
-                .is_some_and(|at| now.saturating_sub(at) < REAL_MOUSE_PRIORITY);
+            let real_mouse_has_priority =
+                self.real_mouse_at.is_some_and(|at| now.saturating_sub(at) < REAL_MOUSE_PRIORITY);
             if !real_mouse_has_priority {
                 self.set_steering(true);
             }
@@ -534,10 +528,9 @@ mod tests {
 
     fn engine_with(control: Control, press: &str, hold: &str) -> Engine {
         let mut config = Config::default();
-        config.buttons.set(
-            control,
-            Binding { press: Command::parse(press).unwrap(), hold: Command::parse(hold).unwrap() },
-        );
+        config
+            .buttons
+            .set(control, Binding { press: Command::parse(press).unwrap(), hold: Command::parse(hold).unwrap() });
         Engine::new(config, true)
     }
 
@@ -593,10 +586,7 @@ mod tests {
     #[test]
     fn view_cycles_apps_then_commits() {
         let mut e = engine();
-        assert_eq!(
-            e.handle(press(Button::View), ms(0)),
-            [Action::SwitcherHold(true), Action::SwitcherNext]
-        );
+        assert_eq!(e.handle(press(Button::View), ms(0)), [Action::SwitcherHold(true), Action::SwitcherNext]);
         assert_eq!(e.tick(ms(500)), []);
         e.handle(release(Button::View), ms(510));
         assert_eq!(e.handle(press(Button::View), ms(520)), [Action::SwitcherNext]);
@@ -661,14 +651,8 @@ mod tests {
     #[test]
     fn triggers_and_dpad_take_any_command() {
         let mut e = engine_with(Control::LeftTrigger, "left-click", "none");
-        assert_eq!(
-            e.handle(Input::Axis(Axis::LeftTrigger, 1.0), ms(0)),
-            [Action::MouseDown(MouseButton::Left)]
-        );
-        assert_eq!(
-            e.handle(Input::Axis(Axis::LeftTrigger, 0.0), ms(10)),
-            [Action::MouseUp(MouseButton::Left)]
-        );
+        assert_eq!(e.handle(Input::Axis(Axis::LeftTrigger, 1.0), ms(0)), [Action::MouseDown(MouseButton::Left)]);
+        assert_eq!(e.handle(Input::Axis(Axis::LeftTrigger, 0.0), ms(10)), [Action::MouseUp(MouseButton::Left)]);
         let mut e = engine_with(Control::DpadUp, "mission-control", "none");
         assert_eq!(e.handle(Input::Axis(Axis::DpadY, -1.0), ms(0)), [Action::MissionControl]);
     }

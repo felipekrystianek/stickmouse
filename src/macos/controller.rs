@@ -5,17 +5,16 @@ use std::cell::RefCell;
 use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Mutex, OnceLock};
 
-use objc2::{AllocAnyThread, MainThreadMarker, msg_send};
 use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
+use objc2::{AllocAnyThread, MainThreadMarker, msg_send};
 use objc2_core_haptics::{
     CHHapticEngine, CHHapticEvent, CHHapticEventParameter, CHHapticEventParameterIDHapticIntensity,
     CHHapticEventTypeHapticContinuous, CHHapticPattern, CHHapticPatternPlayer, CHHapticTimeImmediate,
 };
 use objc2_foundation::{NSArray, NSError};
 use objc2_game_controller::{
-    GCController, GCControllerButtonInput, GCDevice, GCExtendedGamepad, GCHapticsLocalityDefault,
-    GCSystemGestureState,
+    GCController, GCControllerButtonInput, GCDevice, GCExtendedGamepad, GCHapticsLocalityDefault, GCSystemGestureState,
 };
 
 use super::{license, license_window};
@@ -156,10 +155,7 @@ pub fn poll(mtm: MainThreadMarker) {
 fn rescan(poller: &mut Poller, messages: &Sender<Message>) {
     // SAFETY: GameController objects are used on the main thread only.
     let controllers = unsafe { GCController::controllers() };
-    let still_there = poller
-        .active
-        .as_ref()
-        .is_some_and(|active| controllers.iter().any(|c| c == active.controller));
+    let still_there = poller.active.as_ref().is_some_and(|active| controllers.iter().any(|c| c == active.controller));
 
     if poller.active.is_some() && !still_there {
         poller.active = None;
@@ -171,8 +167,7 @@ fn rescan(poller: &mut Poller, messages: &Sender<Message>) {
     }
 
     if poller.active.is_none()
-        && let Some(controller) =
-            controllers.iter().find(|c| unsafe { c.extendedGamepad() }.is_some())
+        && let Some(controller) = controllers.iter().find(|c| unsafe { c.extendedGamepad() }.is_some())
     {
         // SAFETY: as above.
         unsafe {
@@ -196,9 +191,8 @@ fn rescan(poller: &mut Poller, messages: &Sender<Message>) {
 }
 
 fn read(pad: &GCExtendedGamepad) -> State {
-    let pressed = |button: Option<Retained<GCControllerButtonInput>>| {
-        button.is_some_and(|button| unsafe { button.isPressed() })
-    };
+    let pressed =
+        |button: Option<Retained<GCControllerButtonInput>>| button.is_some_and(|button| unsafe { button.isPressed() });
     // SAFETY: plain property reads on the main thread.
     unsafe {
         let (left, right, dpad) = (pad.leftThumbstick(), pad.rightThumbstick(), pad.dpad());

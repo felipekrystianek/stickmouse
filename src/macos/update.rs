@@ -117,10 +117,8 @@ pub fn check_if_due() {
 /// GETs `version.json` with the system curl, which handles proxies and certificates like the
 /// rest of macOS. `-f` turns HTTP errors such as 404 into a failure.
 fn fetch() -> Result<Release, String> {
-    let output = Command::new("curl")
-        .args(["-fsSL", "-m", "20", VERSION_URL])
-        .output()
-        .map_err(|error| error.to_string())?;
+    let output =
+        Command::new("curl").args(["-fsSL", "-m", "20", VERSION_URL]).output().map_err(|error| error.to_string())?;
     if !output.status.success() {
         return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
     }

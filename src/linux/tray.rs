@@ -69,18 +69,8 @@ impl ksni::Tray for Tray {
 
     fn menu(&self) -> Vec<MenuItem<Self>> {
         vec![
-            StandardItem {
-                label: self.status(),
-                enabled: false,
-                ..Default::default()
-            }
-            .into(),
-            StandardItem {
-                label: self.battery_text(),
-                enabled: false,
-                ..Default::default()
-            }
-            .into(),
+            StandardItem { label: self.status(), enabled: false, ..Default::default() }.into(),
+            StandardItem { label: self.battery_text(), enabled: false, ..Default::default() }.into(),
             MenuItem::Separator,
             CheckmarkItem {
                 label: "Enabled".into(),
