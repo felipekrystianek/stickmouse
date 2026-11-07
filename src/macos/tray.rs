@@ -15,7 +15,7 @@ use objc2_app_kit::{
 };
 use objc2_foundation::NSString;
 
-use super::{license, ui, update};
+use super::{license, ui, updater};
 use crate::Message;
 
 pub struct Tray {
@@ -76,8 +76,8 @@ struct StatusBar {
     item: Retained<NSStatusItem>,
     seen: u64,
     license: Option<license::Status>,
-    /// The update the menu shows, so the menu is rebuilt when a background check finds one.
-    update: Option<update::Release>,
+    /// Whether Sparkle has started, so the menu gains "Check for Updates…" once it has.
+    updater: bool,
 }
 
 thread_local! {
@@ -94,17 +94,17 @@ pub fn refresh(mtm: MainThreadMarker) {
             item: NSStatusBar::systemStatusBar().statusItemWithLength(NSVariableStatusItemLength),
             seen: 0,
             license: None,
-            update: None,
+            updater: false,
         });
         let version = shared.version.load(Ordering::Relaxed);
         let status = license::status();
-        let update = update::available();
-        if version == bar.seen && bar.license == Some(status) && bar.update == update {
+        let updater = updater::available();
+        if version == bar.seen && bar.license == Some(status) && bar.updater == updater {
             return;
         }
         bar.seen = version;
         bar.license = Some(status);
-        bar.update = update;
+        bar.updater = updater;
         let tray = shared.tray.lock().unwrap();
         redraw(mtm, bar, &tray);
     });
@@ -139,13 +139,6 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
         }
         license::Status::Expired => menu.addItem(&item(mtm, "Trial ended", None, "")),
     }
-    if let Some(release) = &bar.update {
-        let update = item(mtm, &format!("Update Available: {}…", release.version), Some(sel!(openUpdate:)), "");
-        if !release.notes.is_empty() {
-            update.setToolTip(Some(&NSString::from_str(&release.notes)));
-        }
-        menu.addItem(&update);
-    }
     menu.addItem(&NSMenuItem::separatorItem(mtm));
     let enabled = item(mtm, "Enabled", Some(sel!(toggle:)), "");
     enabled.setState(if tray.enabled { NSControlStateValueOn } else { NSControlStateValueOff });
@@ -155,6 +148,9 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
     menu.addItem(&item(mtm, "Setup & Permissions…", Some(sel!(openSetup:)), ""));
     let license_title = if license::status() == license::Status::Licensed { "License…" } else { "Buy Stickmouse…" };
     menu.addItem(&item(mtm, license_title, Some(sel!(openLicense:)), ""));
+    if bar.updater {
+        menu.addItem(&item(mtm, "Check for Updates…", Some(sel!(checkForUpdates:)), ""));
+    }
     menu.addItem(&NSMenuItem::separatorItem(mtm));
     menu.addItem(&item(mtm, "Quit Stickmouse", Some(sel!(quit:)), "q"));
     bar.item.setMenu(Some(&menu));

@@ -25,5 +25,17 @@
     <string>© 2026 Krystian Filipek. Xbox is a trademark of Microsoft; Stickmouse is not affiliated with Microsoft.</string>
     <key>LSUIElement</key>
     <true/>
+    <!-- Sparkle updates (src/macos/updater.rs): the feed, the key updates must be signed with,
+         and a daily check that is on without asking. -->
+    <key>SUFeedURL</key>
+    <string>https://stickmouse.pages.dev/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string>qis1cQ/OTrMKsWxqRTsfGbg7RdEyQ9at/nEuoSGm4NQ=</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUScheduledCheckInterval</key>
+    <integer>86400</integer>
+    <key>SUAllowsAutomaticUpdates</key>
+    <true/>
 </dict>
 </plist>

@@ -10,7 +10,9 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
   Strict-Transport-Security: max-age=31536000
 
-# The app polls this file daily for updates; keep it fresh.
+# Stickmouse checks these daily for updates (appcast.xml: 1.1 and later, version.json: 1.0).
+/appcast.xml
+  Cache-Control: no-cache
 /version.json
   Cache-Control: no-cache
 

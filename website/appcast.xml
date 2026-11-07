@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Stickmouse</title>
+    <link>https://stickmouse.pages.dev/</link>
+    <item>
+      <title>Stickmouse 1.1.0</title>
+      <pubDate>Sat, 07 Nov 2026 12:00:00 +0000</pubDate>
+      <sparkle:version>1.1.0</sparkle:version>
+      <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://stickmouse.pages.dev/changelog.html</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[
+<style>body { font: 13px -apple-system, sans-serif; } h3 { margin: 12px 0 4px; } small { color: gray; font-weight: normal; } ul { margin: 0; padding-left: 18px; }</style>
+<h3>Stickmouse 1.1.0 <small>2026-11-07</small></h3><ul><li>Stickmouse now updates itself: when a new version is out, it shows what changed and installs it with one click.</li><li>New &quot;Check for Updates…&quot; item in the menu bar menu.</li></ul>
+<h3>Stickmouse 1.0.0 <small>2026-11-06</small></h3><ul><li>First stable release.</li><li>Tidier License and Setup windows.</li><li>Bug reports now go to the Stickmouse repository on GitHub.</li></ul>
+      ]]></description>
+      <enclosure url="https://stickmouse.pages.dev/downloads/Stickmouse-1.1.0.dmg" length="1887577" type="application/octet-stream" sparkle:edSignature="97MPNCPu4Z3Eg6DACW85uqZhM/e2UvLfbGa3TiczP8QkqDAlNkYPRksvLluuEaDQ9hgT1UriXjiUBs/b0kynCQ=="/>
+    </item>
+  </channel>
+</rss>

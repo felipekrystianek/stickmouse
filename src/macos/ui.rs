@@ -133,9 +133,9 @@ define_class!(
             super::license::deactivate();
         }
 
-        #[unsafe(method(openUpdate:))]
-        fn open_update(&self, _sender: Option<&AnyObject>) {
-            super::update::open_download();
+        #[unsafe(method(checkForUpdates:))]
+        fn check_for_updates(&self, _sender: Option<&AnyObject>) {
+            super::updater::check_now();
         }
 
         #[unsafe(method(finishSetup:))]

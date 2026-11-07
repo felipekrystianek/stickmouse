@@ -17,7 +17,7 @@ pub mod settings;
 pub mod setup;
 pub mod tray;
 pub mod ui;
-pub mod update;
+pub mod updater;
 
 use std::cell::Cell;
 use std::process::ExitCode;
@@ -52,12 +52,12 @@ pub fn run_app(work: impl FnOnce() -> ExitCode + Send + 'static) -> ExitCode {
         let mtm = MainThreadMarker::new().expect("timers fire on the main thread");
         if !started.replace(true) {
             license::revalidate_if_due();
+            updater::start_if_bundled(mtm);
             if !setup::show_if_needed(mtm) && license::status() == license::Status::Expired {
                 license_window::show(mtm);
             }
         }
         controller::poll(mtm);
-        update::check_if_due();
         tray::refresh(mtm);
         cursor_theme::refresh(mtm);
         if desktop::take_settings_request() {
