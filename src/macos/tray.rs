@@ -6,15 +6,14 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex, OnceLock};
 
-use block2::RcBlock;
 use objc2::rc::Retained;
-use objc2::runtime::{Bool, Sel};
+use objc2::runtime::Sel;
 use objc2::{MainThreadMarker, MainThreadOnly, sel};
 use objc2_app_kit::{
-    NSBezierPath, NSColor, NSCompositingOperation, NSControlStateValueOff, NSControlStateValueOn, NSImage, NSMenu,
-    NSMenuItem, NSStatusBar, NSStatusItem, NSVariableStatusItemLength,
+    NSControlStateValueOff, NSControlStateValueOn, NSImage, NSMenu, NSMenuItem, NSStatusBar, NSStatusItem,
+    NSVariableStatusItemLength,
 };
-use objc2_foundation::{NSPoint, NSRect, NSSize, NSString};
+use objc2_foundation::NSString;
 
 use super::{license, ui, updater};
 use crate::Message;
@@ -114,13 +113,12 @@ pub fn refresh(mtm: MainThreadMarker) {
 fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
     let active = tray.enabled && tray.connected;
     if let Some(button) = bar.item.button(mtm) {
+        let symbol = if active { "gamecontroller.fill" } else { "gamecontroller" };
         let image = NSImage::imageWithSystemSymbolName_accessibilityDescription(
-            &NSString::from_str(if active { "gamecontroller.fill" } else { "gamecontroller" }),
+            &NSString::from_str(symbol),
             Some(&NSString::from_str("Stickmouse")),
         );
-        // While Stickmouse steers the pointer, the icon flips: a solid badge with the controller
-        // cut out of it, so a glance at the menu bar shows that it is on.
-        if let Some(image) = image.map(|image| if active { inverted(image) } else { image }) {
+        if let Some(image) = image {
             image.setTemplate(true);
             button.setImage(Some(&image));
         }
@@ -156,27 +154,6 @@ fn redraw(mtm: MainThreadMarker, bar: &StatusBar, tray: &Tray) {
     menu.addItem(&NSMenuItem::separatorItem(mtm));
     menu.addItem(&item(mtm, "Quit Stickmouse", Some(sel!(quit:)), "q"));
     bar.item.setMenu(Some(&menu));
-}
-
-/// `symbol` knocked out of a rounded badge. Drawn in black; as a template image the menu bar
-/// recolors it for light and dark mode.
-fn inverted(symbol: Retained<NSImage>) -> Retained<NSImage> {
-    let block = RcBlock::new(move |rect: NSRect| -> Bool {
-        NSColor::blackColor().setFill();
-        NSBezierPath::bezierPathWithRoundedRect_xRadius_yRadius(rect, 4.0, 4.0).fill();
-        let size = symbol.size();
-        let glyph = NSRect::new(
-            NSPoint::new(
-                rect.origin.x + (rect.size.width - size.width) / 2.0,
-                rect.origin.y + (rect.size.height - size.height) / 2.0,
-            ),
-            size,
-        );
-        symbol.drawInRect_fromRect_operation_fraction(glyph, NSRect::ZERO, NSCompositingOperation::DestinationOut, 1.0);
-        Bool::YES
-    });
-    // A little wider than the controller glyph, and as tall as menu bar icons usually are.
-    NSImage::imageWithSize_flipped_drawingHandler(NSSize::new(26.0, 18.0), false, &block)
 }
 
 /// An item without an action shows greyed out, which suits the status lines.
